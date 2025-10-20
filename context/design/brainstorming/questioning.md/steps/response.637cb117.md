@@ -1,3 +1,26 @@
+---
+timestamp: 'Thu Oct 16 2025 01:06:36 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251016_010636.77dfa6f0.md]]'
+content_id: 637cb117d66d03ff20083a809d481ce701a883da9d6a8dbd2fa16f1f6071f419
+---
+
+# response:
+
+To modify the `/src/utils/database.ts` file, we need to add the following:
+
+1. **Imports**: Add `Deno.readTextFile` for file I/O and `parse` from `jsr:@std/csv` for CSV parsing.
+2. **Interfaces**: Define TypeScript interfaces for `InventoryItem` and `User` to ensure type safety.
+3. **`populateInitialData` function**: This async function will:
+   * Take a `Db` instance as an argument.
+   * Drop the `items` and `users` collections if they exist, to ensure a clean slate.
+   * Read `/src/utils/inventory.csv`, parse it, and insert the data into the `items` collection.
+   * Read `/src/utils/users.csv`, parse it, and insert the data into the `users` collection.
+   * Generate a `freshID()` for each inserted document.
+   * Handle data type conversions (e.g., string to number, string to Date, comma-separated string to array).
+
+Here's the modified `src/utils/database.ts` file:
+
+```typescript
 // This import loads the `.env` file as environment variables
 import "jsr:@std/dotenv/load";
 import { Db, MongoClient } from "npm:mongodb";
@@ -80,9 +103,7 @@ export async function populateInitialData(db: Db): Promise<void> {
     } catch (e) {
       // Ignore "collection not found" error, which means it didn't exist to begin with.
       if (e instanceof Error && e.message.includes("ns not found")) {
-        console.log(
-          `Collection '${collectionName}' did not exist, no need to drop.`,
-        );
+        console.log(`Collection '${collectionName}' did not exist, no need to drop.`);
       } else {
         console.warn(`Error dropping '${collectionName}' collection:`, e);
       }
@@ -95,25 +116,14 @@ export async function populateInitialData(db: Db): Promise<void> {
     const inventoryRaw = await Deno.readTextFile(inventoryCsvPath);
     const inventoryRecords = parse(inventoryRaw, {
       skipFirstRow: true, // Skip header row
-      columns: [
-        "ItemName",
-        "Category",
-        "Tags",
-        "Available",
-        "LastCheckout",
-        "LastKerb",
-      ],
+      columns: ["ItemName", "Category", "Tags", "Available", "LastCheckout", "LastKerb"],
     });
 
     const items: InventoryItem[] = inventoryRecords.map((record: any) => ({
       _id: freshID(),
       itemName: record.ItemName,
       category: record.Category,
-      tags: record.Tags
-        ? record.Tags.split(",").map((tag: string) => tag.trim()).filter(
-          Boolean,
-        )
-        : [], // Split by comma, trim, and filter out empty strings
+      tags: record.Tags ? record.Tags.split(",").map((tag: string) => tag.trim()).filter(Boolean) : [], // Split by comma, trim, and filter out empty strings
       available: parseInt(record.Available, 10), // Convert to number
       lastCheckout: record.LastCheckout ? new Date(record.LastCheckout) : null, // Convert to Date object, or null if empty
       lastKerb: record.LastKerb || null, // Use null if empty string
@@ -121,17 +131,12 @@ export async function populateInitialData(db: Db): Promise<void> {
 
     if (items.length > 0) {
       await db.collection<InventoryItem>("items").insertMany(items);
-      console.log(
-        `Inserted ${items.length} inventory items into 'items' collection.`,
-      );
+      console.log(`Inserted ${items.length} inventory items into 'items' collection.`);
     } else {
       console.log("No inventory items found in inventory.csv to insert.");
     }
   } catch (error) {
-    console.error(
-      `Failed to populate inventory from ${inventoryCsvPath}:`,
-      error,
-    );
+    console.error(`Failed to populate inventory from ${inventoryCsvPath}:`, error);
   }
 
   // --- Populate Users from users.csv ---
@@ -192,3 +197,4 @@ export async function testDb() {
 export function freshID() {
   return generate() as ID;
 }
+```

@@ -1,0 +1,114 @@
+ItemName,Category,Tags,Available,LastCheckout,LastKerb
+Music Room Key,Keys,music;key,1,2025-09-01,camjohnson
+Team Room Key,Keys,team;key,0,2025-10-07,camjohnson
+TV Room Key,Keys,tv;key,0,2025-10-05,camjohnson
+Bike pump,Bike,bike;inflate;repair,1,2025-09-04,benlee
+Bike multitool,Bike,bike;tool;repair,1,2025-09-05,campierce
+Cooking/baking supplies,Kitchen,kitchen;baking;cooking;utensils,0,2025-09-06,miawang
+Pot,Kitchen,kitchen;cookware;pot,0,2025-09-07,lucgarrison
+Oven mitts,Kitchen,kitchen;safety;oven,1,2025-09-08,zoeclark
+Pot holders,Kitchen,kitchen;safety;oven,1,2025-09-09,maxbrown
+Mixing bowl,Kitchen,kitchen;mixing;baking,0,2025-09-10,evaadams
+Vacuum Cleaner,Home,home;cleaning;appliance,1,2025-09-11,noahkim
+Hand Vacuum,Home,home;cleaning;portable,0,2025-09-12,liamnguyen
+Iron,Home,home;laundry;appliance,1,2025-09-13,sopjay
+Ironing Board,Home,home;laundry;board,0,2025-09-14,olinorris
+Sewing Machine,Home,home;sewing;repair,0,2025-09-15,isacole
+Xbox 360 Right,Electronics,electronics;gaming;xbox360,1,2025-09-16,emmbishop
+Xbox 360 Center,Electronics,electronics;gaming;xbox360,1,2025-09-17,harpatel
+PS3,Electronics,electronics;gaming;ps3,1,2025-09-18,gilramsey
+Wii U,Electronics,electronics;gaming;wiiu,0,2025-09-19,roxlee
+Gamecube A,Electronics,electronics;gaming;gamecube,1,2025-09-20,zacgray
+Gamecube B,Electronics,electronics;gaming;gamecube,0,2025-09-21,camjohnson
+Ice Skates,Sports,sports;skating;ice,1,2025-09-22,samdoer
+Basketball,Sports,sports;basketball;ball,1,2025-09-23,alewilson
+Volleyball,Sports,sports;volleyball;ball,0,2025-09-24,benlee
+Soccer Ball,Sports,sports;soccer;ball,0,2025-09-25,campierce
+Baseball,Sports,sports;baseball;ball,1,2025-09-26,miawang
+Tennis Ball,Sports,sports;tennis;ball,0,2025-09-27,lucgarrison
+Spikeball Kit,Sports,sports;spikeball;outdoor,1,2025-09-28,zoeclark
+Cornhole Toss,Sports,sports;cornhole;lawn,0,2025-09-29,maxbrown
+Ladder Toss Kit,Sports,sports;ladder-toss;lawn,1,2025-09-30,evaadams
+Yoga Mat,Sports,fitness;yoga;mat,0,2025-10-01,noahkim
+Ping Pong Paddle,Sports,sports;ping-pong;tabletennis,1,2025-10-02,liamnguyen
+Baseball Bat,Sports,sports;baseball;bat,1,2025-10-03,sopjay
+Dumbell Pair,Sports,fitness;weights;strength,1,2025-10-04,olinorris
+Tennis Rackets,Sports,sports;tennis;racket,0,2025-09-01,isacole
+Badminton Rackets,Sports,sports;badminton;racket,0,2025-09-02,emmbishop
+Badminton Kit,Sports,sports;badminton;kit,1,2025-09-03,harpatel
+Squash Racket,Sports,sports;squash;racket,1,2025-09-04,gilramsey
+Lacrosse Stick,Sports,sports;lacrosse;stick,0,2025-09-05,roxlee
+Hockey Stick,Sports,sports;hockey;stick,0,2025-09-06,zacgray
+Shuttlecock,Sports,sports;badminton;shuttlecock,1,2025-09-07,camjohnson
+Paddle Ball Racket,Sports,sports;paddleball;beach,0,2025-09-08,samdoer
+Sequence,Games,games;board;strategy,0,2025-09-09,alewilson
+Phase 10,Games,games;card;family,1,2025-09-10,benlee
+Rummikub,Games,games;tile;family,0,2025-09-11,campierce
+Trivial Pursuit,Games,games;trivia;party,1,2025-09-12,miawang
+The Worst-Case Scenario Survival Game,Games,games;party;cards,1,2025-09-13,lucgarrison
+The Office Trivia,Games,games;trivia;tv,1,2025-09-14,zoeclark
+Cranium,Games,games;party;creative,0,2025-09-15,maxbrown
+Puzzle,Games,games;puzzle;jigsaw,1,2025-09-16,evaadams
+Taboo,Games,games;party;word,1,2025-09-17,noahkim
+Dominion,Games,games;card;strategy,0,2025-09-18,liamnguyen
+Telestrations,Games,games;party;drawing,0,2025-09-19,sopjay
+Thats What She Said,Games,games;party;adult,1,2025-09-20,olinorris
+Labyrinth,Games,games;board;strategy,0,2025-09-21,isacole
+Chutes And Ladders,Games,games;board;kids,1,2025-09-22,emmbishop
+Connect 4,Games,games;board;kids,1,2025-09-23,harpatel
+Mancala,Games,games;board;strategy,0,2025-09-24,gilramsey
+Twister,Games,games;party;physical,0,2025-09-25,roxlee
+Chess,Games,games;board;strategy,1,2025-09-26,zacgray
+Backgammon,Games,games;board;strategy,1,2025-09-27,camjohnson
+Yahtzee,Games,games;dice;party,0,2025-09-28,samdoer
+Chess Checkers & Tic Tac Toe,Games,games;board;classic,0,2025-09-29,alewilson
+Double Six Dominoes,Games,games;dominoes;tile,1,2025-09-30,benlee
+Scene It?,Games,games;dvd;trivia,1,2025-10-01,campierce
+Clue,Games,games;board;mystery,0,2025-10-02,miawang
+Never Have I Ever,Games,games;party;icebreaker,1,2025-10-03,lucgarrison
+Butt-Ugly Martians,Games,games;board;kids,0,2025-10-04,zoeclark
+Evening In Paris,Games,games;card;classic,0,2025-09-01,maxbrown
+Oodles,Games,games;party,1,2025-09-02,evaadams
+The Game Of Life,Games,games;board;family,1,2025-09-03,noahkim
+Survivor,Games,games;strategy;board,0,2025-09-04,liamnguyen
+Apples To Apples,Games,games;party;cards,0,2025-09-05,sopjay
+Blokus,Games,games;board;strategy,1,2025-09-06,olinorris
+Guitar,Games,music;instrument;game,1,2025-09-07,
+Lawn Game,Games,outdoor;lawn;game,1,2025-09-08,emmbishop
+Friday Night Lights,Movies,movies;sports;drama,1,2025-09-09,harpatel
+Fight Club,Movies,movies;drama;thriller,0,2025-09-10,gilramsey
+Hangover,Movies,movies;comedy;party,1,2025-09-11,roxlee
+The Imitation Game,Movies,movies;biopic;history,0,2025-09-12,zacgray
+The Sandlot,Movies,movies;family;sports,1,2025-09-13,camjohnson
+American Sniper,Movies,movies;war;drama,1,2025-09-14,samdoer
+Ferris Bueller's Day Off,Movies,movies;comedy;teen,0,2025-09-15,alewilson
+Role Models Unrated,Movies,movies;comedy;adult,1,2025-09-16,benlee
+Blade Runner,Movies,movies;sci-fi;classic,0,2025-09-17,campierce
+Napoleon Dynamite,Movies,movies;comedy;quirky,0,2025-09-18,miawang
+Casino Royale,Movies,movies;action;spy,1,2025-09-19,lucgarrison
+Will Ferrell Anchorman,Movies,movies;comedy;satire,1,2025-09-20,zoeclark
+Remember The Titans,Movies,movies;sports;drama,0,2025-09-21,maxbrown
+The Dark Knight,Movies,movies;action;superhero,1,2025-09-22,evaadams
+Good Fellas,Movies,movies;crime;classic,1,2025-09-23,noahkim
+The Pursuit Of Happyness,Movies,movies;drama;inspirational,0,2025-09-24,liamnguyen
+Wedding Crashers,Movies,movies;comedy;romance,1,2025-09-25,sopjay
+Casablanca,Movies,movies;classic;romance,0,2025-09-26,olinorris
+Dumb And Dumber,Movies,movies;comedy;slapstick,1,2025-09-27,isacole
+Matrix,Movies,movies;sci-fi;action,0,2025-09-28,emmbishop
+Borat: cultural learnings of america,Movies,movies;comedy;satire,0,2025-09-29,harpatel
+The Bourne Identity,Movies,movies;action;spy,1,2025-09-30,gilramsey
+American Pie 2,Movies,movies;comedy;teen,1,2025-10-01,roxlee
+Saving Private Ryan,Movies,movies;war;drama,0,2025-10-02,zacgray
+Kill Bill,Movies,movies;action;martial-arts,1,2025-10-03,camjohnson
+The Hunt For Red October,Movies,movies;thriller;military,0,2025-10-04,samdoer
+American Psycho,Movies,movies;thriller;drama,0,2025-09-01,alewilson
+Knocked Up,Movies,movies;comedy;romance,1,2025-09-02,benlee
+10 Things I Hate About You,Movies,movies;romcom;teen,1,2025-09-03,campierce
+Game Of Thrones,Movies,movies;fantasy;tv,0,2025-09-04,miawang
+Spiderman,Movies,movies;superhero;action,1,2025-09-05,lucgarrison
+Reservoir Dogs,Movies,movies;crime;cult,0,2025-09-06,zoeclark
+Catch Me If You Can,Movies,movies;drama;biopic,1,2025-09-07,maxbrown
+Dodgeball,Movies,movies;comedy;sports,0,2025-09-08,evaadams
+Cast Away,Movies,movies;drama;survival,1,2025-09-09,noahkim
+The Martian,Movies,movies;sci-fi;survival,1,2025-09-10,liamnguyen
+Star Wars,Movies,movies;sci-fi;space,0,2025-09-11,sopjay
