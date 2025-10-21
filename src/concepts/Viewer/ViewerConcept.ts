@@ -3,7 +3,7 @@
 // import * as path from "node:path";
 
 import { Db, MongoClient } from "npm:mongodb"; // Import MongoDB types
-import { getDb, InventoryItem as DbInventoryItem } from "@utils/database.ts"; // Import getDb and InventoryItem from database.ts
+import { getDb, InventoryItem as DbInventoryItem } from "@src/utils/database.ts"; // Import getDb and InventoryItem from database.ts
 import { GeminiLLM } from "../../gemini-llm.ts";
 import { ID } from "../../utils/types.ts"; // Import ID type
 
@@ -22,14 +22,18 @@ export default class ViewerConcept {
   private items: Item[] = [];
   // private csvPath: string; // Removed, no longer using CSV files
 
-  private db: Db; // MongoDB Db instance
-  private client: MongoClient; // MongoDB Client instance for connection management
+  private db!: Db; // MongoDB Db instance
+  private client!: MongoClient; // MongoDB Client instance for connection management
+  private dbReady: Promise<void>; // Ensures DB is initialized before use
 
-  // Constructor now accepts Db and MongoClient instances
-  constructor(db: Db, client: MongoClient) {
+  // Constructor now initializes MongoDB internally without external arguments
+  constructor() {
     console.log("Creating a new Viewer constructor!");
-    this.db = db;
-    this.client = client;
+    this.dbReady = (async () => {
+      const [db, client] = await getDb();
+      this.db = db;
+      this.client = client;
+    })();
   }
 
   // Helper to map a DbInventoryItem (from MongoDB) to ViewerConcept's Item
@@ -51,6 +55,7 @@ export default class ViewerConcept {
   /** Load items from MongoDB into memory */
   async loadItems(): Promise<void> {
     try {
+      await this.dbReady; // Ensure DB is initialized
       const dbItems = await this.db.collection<DbInventoryItem>("items").find()
         .toArray();
       this.items = dbItems.map(this.mapDbInventoryItemToItem);
@@ -64,6 +69,7 @@ export default class ViewerConcept {
 
   /** Close the MongoDB client connection */
   async closeDb(): Promise<void> {
+    await this.dbReady; // Ensure client is initialized
     await this.client.close();
     console.log("MongoDB client closed.");
   }
@@ -220,8 +226,7 @@ Return a JSON array of objects with fields: {"itemName": string, "suggestion": s
 
 // Updated helper for quick CLI testing
 export async function createViewer(): Promise<ViewerConcept> {
-  const [db, client] = await getDb(); // Initialize MongoDB connection
-  const v = new ViewerConcept(db, client);
+  const v = new ViewerConcept();
   await v.loadItems(); // Load items from MongoDB
   return v;
 }
