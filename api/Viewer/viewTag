@@ -1,0 +1,36 @@
+**Description:** Returns a list of inventory items associated with the specified tag (case-insensitive).
+
+**Requirements:**
+- None explicitly defined.
+
+**Effects:**
+- Returns an array of `Item` objects that include the specified tag in their `tags` list.
+
+**Request Body:**
+```json
+{
+  "tag": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

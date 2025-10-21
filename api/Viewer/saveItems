@@ -1,0 +1,24 @@
+**Description:** Persists the current in-memory inventory items back to the configured CSV file, overwriting its content.
+
+**Requirements:**
+- The configured CSV file must be writable.
+
+**Effects:**
+- The current in-memory `items` are serialized into CSV format and written to the file.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

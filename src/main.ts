@@ -1,7 +1,11 @@
 import * as readline from "node:readline";
 import * as path from "node:path";
-import { createViewerFromCsv } from "./concepts/Viewer/inventoryviewer.ts";
-import { Reservation } from "./concepts/Reservation/inventoryreservation.ts";
+import process from "node:process";
+import { createViewerFromCsv } from "@concepts/Viewer/ViewerConcept.ts";
+import {
+  InventoryReservationConcept,
+  // ReservationConcept,
+} from "@concepts/Reservation/ReservationConcept.ts";
 
 async function question(rl: readline.Interface, q: string) {
   return new Promise<string>((res) => rl.question(q, (ans) => res(ans.trim())));
@@ -13,12 +17,16 @@ async function runCli() {
     output: process.stdout,
   });
   // Resolve CSVs from the project working directory so compiled code (in dist/) finds them
-  const inventoryPath = path.resolve(process.cwd(), "inventory.csv");
-  const usersPath = path.resolve(process.cwd(), "users.csv");
+  const inventoryPath = path.resolve(process.cwd(), "src/utils/inventory.csv");
+  const usersPath = path.resolve(process.cwd(), "src/utils/users.csv");
 
   console.log("Loading inventory...");
-  const viewer = await createViewerFromCsv(inventoryPath);
-  const reservation = new Reservation(inventoryPath, usersPath, 14);
+  const viewer = await createViewerFromCsv();
+  const reservation = new InventoryReservationConcept(
+    inventoryPath,
+    usersPath,
+    14,
+  );
 
   console.log('Inventory CLI ready. Type "help" for commands.');
 
@@ -95,7 +103,7 @@ async function runCli() {
         }
         const itemName = parts.join(" ");
         try {
-          await reservation.checkoutItem(kerb, itemName, days);
+          await reservation.checkoutItem(kerb, itemName, days ? days : 10);
           // reload viewer so subsequent queries reflect change
           await viewer.loadItems();
           console.log(`Checked out ${itemName} to ${kerb}`);
@@ -140,9 +148,9 @@ async function runCli() {
   console.log("Goodbye");
 }
 
-if (require.main === module) {
-  runCli().catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
-}
+// if (require.main === module) {
+runCli().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
+// }

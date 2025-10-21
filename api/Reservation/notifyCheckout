@@ -1,0 +1,24 @@
+**Description:** Triggers the process to send reminder emails to users for items that are overdue.
+
+**Requirements:**
+- true (This action can always be performed, and its effects depend on the state of reservations.)
+
+**Effects:**
+- Sends an email to the `kerb` associated with each overdue item, as a reminder to check the item back in.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

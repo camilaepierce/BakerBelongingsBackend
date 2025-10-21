@@ -4,12 +4,8 @@
  * Demonstrates both manual viewing and checkout and LLM-assisted viewing
  */
 
-import {
-  createViewerFromCsv,
-  InventoryViewer,
-  Item,
-} from "./inventoryviewer.ts";
-import { Reservation } from "../Reservation/inventoryreservation.ts";
+import { createViewerFromCsv } from "./ViewerConcept.ts";
+import { InventoryReservationConcept } from "../Reservation/ReservationConcept.ts";
 import * as path_deno from "https://deno.land/std@0.208.0/path/mod.ts";
 // Deno std library for assertions
 import {
@@ -127,7 +123,7 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
     paths = await setupTestFiles();
     const csvPath = paths.inventory;
 
-    const v = await createViewerFromCsv(csvPath);
+    const v = await createViewerFromCsv();
 
     await t.step("viewAvailable returns an array of items", () => {
       const available = v.viewAvailable();
@@ -188,7 +184,7 @@ Deno.test("InventoryViewer: LLM-Assisted Queries", async (t) => {
     paths = await setupTestFiles();
     const csvPath = paths.inventory;
 
-    const v = await createViewerFromCsv(csvPath);
+    const v = await createViewerFromCsv();
     const llm = await createLlmFromConfig();
 
     // If the LLM returns the empty-fallback, use a deterministic fake for these tests
@@ -266,7 +262,7 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
     const inventoryPath = paths.inventory;
     const usersPath = paths.users;
 
-    const v1 = await createViewerFromCsv(inventoryPath);
+    const v1 = await createViewerFromCsv();
     const avail = v1.viewAvailable();
     assert(
       avail.length >= 1,
@@ -276,11 +272,11 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
     const chosen = avail[0].itemName;
     const kerb = "camjohnson";
 
-    const r = new Reservation(inventoryPath, usersPath, 1);
+    const r = new InventoryReservationConcept(inventoryPath, usersPath, 1);
 
     await t.step("item becomes unavailable after checkout", async () => {
       await r.checkoutItem(kerb, chosen, 1);
-      const v2 = await createViewerFromCsv(inventoryPath); // Reload viewer to reflect changes
+      const v2 = await createViewerFromCsv(); // Reload viewer to reflect changes
       const stillAvail = v2.viewAvailable().some((i) => i.itemName === chosen);
       assert(!stillAvail, "Item should be unavailable after checkout");
     });
@@ -298,7 +294,7 @@ Deno.test("LLM Mixed Flow", async (t) => {
     const inventoryPath = paths.inventory;
     const usersPath = paths.users;
 
-    const viewer = await createViewerFromCsv(inventoryPath);
+    const viewer = await createViewerFromCsv();
     const available = viewer.viewAvailable();
     assert(
       available.length >= 2,

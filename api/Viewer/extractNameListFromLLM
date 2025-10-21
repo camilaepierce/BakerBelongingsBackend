@@ -1,0 +1,30 @@
+**Description:** Extracts a list of item names (strings) from a given LLM response text, assuming the text contains a JSON array of strings.
+
+**Requirements:**
+- The input `text` should contain a valid JSON array of strings.
+
+**Effects:**
+- Returns an array of objects, where each object contains a `name` representing an extracted item name.
+
+**Request Body:**
+```json
+{
+  "text": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "name": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

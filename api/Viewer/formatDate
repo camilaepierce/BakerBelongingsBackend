@@ -1,0 +1,30 @@
+**Description:** Formats a Date object into an ISO date string (YYYY-MM-DD).
+
+**Requirements:**
+- The input `d` should be a valid ISO 8601 date string that can be parsed into a Date object.
+
+**Effects:**
+- Returns an array containing a single object with the `formattedDate` string.
+
+**Request Body:**
+```json
+{
+  "d": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "formattedDate": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

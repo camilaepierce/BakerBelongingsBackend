@@ -1,0 +1,31 @@
+### POST /api/Roles/allowAction
+
+**Description:** returns True if action is an action corresponding to the user's permission flags
+
+**Requirements:**
+- user is a valid User, action is a valid Action
+
+**Effects:**
+- returns True if action is an action corresponding to the user's permission flags
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "action": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{
+  "allowed": "boolean"
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

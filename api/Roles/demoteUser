@@ -1,0 +1,30 @@
+### POST /api/Roles/demoteUser
+
+**Description:** removes user from Role containing given Permission Flag
+
+**Requirements:**
+- user is a valid User, permission is a valid Permission Flag, user is within the role permission refers to
+
+**Effects:**
+- removes user from Role containing given Permission Flag
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "permission": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

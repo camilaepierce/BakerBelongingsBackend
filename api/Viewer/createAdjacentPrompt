@@ -1,0 +1,38 @@
+**Description:** Generates an LLM prompt string designed to find adjacent or similar items based on a target item's details and the current inventory.
+
+**Requirements:**
+- The input `target` must be a valid `Item` object.
+
+**Effects:**
+- Returns an array containing a single object with the generated `prompt` string.
+
+**Request Body:**
+```json
+{
+  "target": {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"]
+  }
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "prompt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

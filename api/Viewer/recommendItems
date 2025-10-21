@@ -1,0 +1,38 @@
+**Description:** Uses an internal LLM to recommend inventory items for a user based on their stated interests, providing a one-sentence suggestion for each recommended item.
+
+**Requirements:**
+- None explicitly defined.
+
+**Effects:**
+- Returns an array of objects, each containing an `Item` and a `suggestion` string.
+
+**Request Body:**
+```json
+{
+  "interests": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "item": {
+      "itemName": "string",
+      "lastCheckout": "string | null",
+      "available": "boolean",
+      "lastKerb": "string",
+      "categories": ["string"],
+      "tags": ["string"]
+    },
+    "suggestion": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

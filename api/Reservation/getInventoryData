@@ -1,0 +1,35 @@
+**Description:** Retrieves the current inventory data for all items managed by the concept.
+
+**Requirements:**
+- true (This action can always be performed.)
+
+**Effects:**
+- Returns the current inventory, including details about each item.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Action):**
+```json
+{
+  "items": [
+    {
+      "itemName": "String",
+      "category": "String",
+      "lastCheckout": "Date",
+      "lastKerb": "String",
+      "available": "Number"
+    }
+  ]
+}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+---

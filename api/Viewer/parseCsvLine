@@ -1,0 +1,30 @@
+**Description:** Parses a single CSV formatted string line into an array of string values, handling quotes and delimiters.
+
+**Requirements:**
+- The input `line` must be a string.
+
+**Effects:**
+- Returns an array of objects, where each object contains a `value` representing a parsed field from the CSV line.
+
+**Request Body:**
+```json
+{
+  "line": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "value": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

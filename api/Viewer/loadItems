@@ -1,0 +1,25 @@
+**Description:** Loads inventory items from the configured CSV file (`inventory.csv` by default) into memory.
+
+**Requirements:**
+- The configured CSV file must exist and be readable.
+
+**Effects:**
+- The in-memory inventory `items` is populated with data parsed from the CSV file.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

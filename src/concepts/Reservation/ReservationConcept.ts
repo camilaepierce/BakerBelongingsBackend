@@ -65,7 +65,7 @@ function parseCsvLineForReservation(line: string): string[] {
 }
 
 // --- CSV-BASED IMPLEMENTATION (Reservation class) ---
-export class Reservation {
+export class InventoryReservationConcept {
   private inventoryCsvPath: string;
   private usersCsvPath: string;
   private durationDays: number;
@@ -279,7 +279,7 @@ interface DbUser {
   role: string;
 }
 
-export class InventoryReservation {
+export default class ReservationConcept {
   private db: Db;
 
   constructor(db: Db) {

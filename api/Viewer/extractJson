@@ -1,0 +1,30 @@
+**Description:** Extracts and parses the first JSON object or array found within a given text string.
+
+**Requirements:**
+- The input `text` must contain a parsable JSON structure (either `{...}` or `[...]`).
+
+**Effects:**
+- Returns an array containing a single object with the `jsonContent` (which can be any JSON type: object, array, string, number, boolean, null).
+
+**Request Body:**
+```json
+{
+  "text": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "jsonContent": "any"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

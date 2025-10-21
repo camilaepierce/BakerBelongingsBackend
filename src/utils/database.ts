@@ -6,7 +6,7 @@ import { generate } from "jsr:@std/uuid/unstable-v7";
 import { parse } from "jsr:@std/csv"; // New import for CSV parsing
 
 // --- New Interfaces for data models ---
-interface InventoryItem {
+export interface InventoryItem {
   _id: ID;
   itemName: string;
   category: string;
@@ -16,7 +16,7 @@ interface InventoryItem {
   lastKerb: string | null;
 }
 
-interface User {
+export interface User {
   _id: ID;
   kerb: string;
   first: string;

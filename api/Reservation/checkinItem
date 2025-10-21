@@ -1,0 +1,28 @@
+### POST /api/Reservation/checkinItem
+
+**Description:** Records that a previously checked-out item has been returned, making it available again.
+
+**Requirements:**
+- true (This action can always be performed.)
+
+**Effects:**
+- The item is marked as available. (Implicitly, `lastCheckout` and `lastKerb` are cleared, as per typical check-in behavior.)
+
+**Request Body:**
+```json
+{
+  "itemName": "String"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

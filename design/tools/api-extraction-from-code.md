@@ -6,6 +6,10 @@ The following is an explanation of how concepts are implemented, for the purpose
 
 [@implementing-concepts](../background/implementing-concepts.md)
 
-# prompt: 
+# prompt: Now analyze the following Concept Implementation and create an API of these POST requests based on those instructions
+- Registering concept: Reservation at /api/Reservation
+  - Endpoint: POST /api/Reservation/checkoutItem
+  - Endpoint: POST /api/Reservation/checkinItem
 
-Now, analyze the following Concept Implementation and generate the API documentation based on these instructions.
+
+  

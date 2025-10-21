@@ -1,0 +1,30 @@
+**Description:** Generates an LLM prompt string designed for recommending inventory items based on user interests, using a sample of the inventory.
+
+**Requirements:**
+- The input `interests` must be a string.
+
+**Effects:**
+- Returns an array containing a single object with the generated `prompt` string.
+
+**Request Body:**
+```json
+{
+  "interests": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "prompt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

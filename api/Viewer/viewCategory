@@ -1,0 +1,36 @@
+**Description:** Returns a list of inventory items belonging to the specified category (case-insensitive).
+
+**Requirements:**
+- None explicitly defined.
+
+**Effects:**
+- Returns an array of `Item` objects that include the specified category in their `categories` list.
+
+**Request Body:**
+```json
+{
+  "category": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

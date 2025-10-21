@@ -1,0 +1,36 @@
+**Description:** Returns a single inventory item matching the given item name (case-insensitive).
+
+**Requirements:**
+- An item with the specified `itemName` must exist in the inventory.
+
+**Effects:**
+- Returns an array containing the `Item` object that exactly matches the `itemName`.
+
+**Request Body:**
+```json
+{
+  "itemName": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

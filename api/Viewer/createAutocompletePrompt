@@ -1,0 +1,31 @@
+**Description:** Generates an LLM prompt string designed for autocompleting item names based on a given partial input prefix and the available inventory names.
+
+**Requirements:**
+- The input `prefix` must be a string.
+
+**Effects:**
+- Returns an array containing a single object with the generated `prompt` string.
+
+**Request Body:**
+```json
+{
+  "prefix": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "prompt": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

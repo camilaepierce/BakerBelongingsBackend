@@ -1,0 +1,37 @@
+**Description:** Uses an internal LLM to suggest inventory item names that best match a given partial input prefix.
+
+**Requirements:**
+- None explicitly defined.
+
+**Effects:**
+- Returns an array of `Item` objects whose names match the LLM's autocomplete suggestions.
+
+**Request Body:**
+```json
+{
+  "prefix": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

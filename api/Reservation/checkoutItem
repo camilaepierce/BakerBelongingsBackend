@@ -1,0 +1,28 @@
+**Description:** Records that an item has been checked out by a user, setting an expiry time.
+
+**Requirements:**
+- The provided `item` must refer to a valid item.
+- The `kerb` must correspond to a resident with the appropriate role.
+
+**Effects:**
+- An expiry Date is set for the checked-out item.
+
+**Request Body:**
+```json
+{
+  "kerb": "String",
+  "item": "String"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

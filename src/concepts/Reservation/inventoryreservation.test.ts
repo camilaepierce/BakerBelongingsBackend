@@ -12,7 +12,7 @@ import {
 } from "./../../utils/database.ts"; // Correct path
 import { Db, MongoClient } from "npm:mongodb"; // Needed for MongoDB tests
 import { ID } from "./../../utils/types.ts"; // Correct path
-import { InventoryReservation, Reservation } from "./inventoryreservation.ts"; // Consolidated import
+import { InventoryReservationConcept } from "./ReservationConcept.ts"; // Consolidated import
 
 import {
   AlreadyCheckedOutError,
@@ -161,7 +161,11 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "successfully checks out an available item",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath, 7); // 7 days duration
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+          7,
+        ); // 7 days duration
 
         const mockDate = new originalDate("2023-11-01T10:00:00Z");
         globalThis.Date = class extends originalDate {
@@ -203,7 +207,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
 
     await t.step("throws error if item not found", async () => {
       await beforeEachStep(); // Manual setup for this test step
-      const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+      const reservation = new InventoryReservationConcept(
+        inventoryCsvPath,
+        usersCsvPath,
+      );
       await assertRejects(
         () => reservation.checkoutItem("user1", "NonExistentItem", 1),
         ItemNotFoundError, // Use custom error
@@ -212,7 +219,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
 
     await t.step("throws error if kerb not found", async () => {
       await beforeEachStep(); // Manual setup for this test step
-      const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+      const reservation = new InventoryReservationConcept(
+        inventoryCsvPath,
+        usersCsvPath,
+      );
       await assertRejects(
         () => reservation.checkoutItem("nonexistent", "Keyboard", 1),
         UserNotFoundError, // Use custom error
@@ -223,7 +233,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "throws error if kerb is not a resident",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+        );
         await assertRejects(
           () => reservation.checkoutItem("user2", "Keyboard", 1),
           UserNotFoundError, // Use custom error
@@ -239,7 +252,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "throws error if item already checked out (CSV data)",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+        );
         // Monitor is initially set to Available=0 in initialInventoryCsvContent
         await assertRejects(
           () => reservation.checkoutItem("user1", "Monitor", 1),
@@ -252,7 +268,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "throws error if item already checked out (in-memory reservation)",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+        );
         const mockDate = new originalDate("2023-11-01T10:00:00Z");
         globalThis.Date = class extends originalDate {
           constructor(dateString?: string | number | Date) {
@@ -282,7 +301,11 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "successfully checks in a reserved item",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath, 7);
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+          7,
+        );
         const mockDate = new originalDate("2023-11-01T10:00:00Z");
         globalThis.Date = class extends originalDate {
           constructor(dateString?: string | number | Date) {
@@ -324,7 +347,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
 
     await t.step("throws error if item not found", async () => {
       await beforeEachStep(); // Manual setup for this test step
-      const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+      const reservation = new InventoryReservationConcept(
+        inventoryCsvPath,
+        usersCsvPath,
+      );
       await assertRejects(
         () => reservation.checkinItem("NonExistentItem"),
         ItemNotFoundError, // Use custom error
@@ -335,7 +361,10 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
       "throws error if item not currently checked out (no in-memory reservation)",
       async () => {
         await beforeEachStep(); // Manual setup for this test step
-        const reservation = new Reservation(inventoryCsvPath, usersCsvPath);
+        const reservation = new InventoryReservationConcept(
+          inventoryCsvPath,
+          usersCsvPath,
+        );
         // Keyboard is available in CSV, but not in reservation's in-memory map initially
         await assertRejects(
           () => reservation.checkinItem("Keyboard"),

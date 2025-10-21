@@ -3,6 +3,7 @@ import { getDb } from "@utils/database.ts";
 import { walk } from "jsr:@std/fs";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { toFileUrl } from "jsr:@std/path/to-file-url";
+import { createViewerFromCsv } from "@concepts/Viewer/ViewerConcept.ts";
 
 // Parse command-line arguments for port and base URL
 const flags = parseArgs(Deno.args, {
@@ -50,6 +51,12 @@ async function main() {
         typeof ConceptClass !== "function" ||
         !ConceptClass.name.endsWith("Concept")
       ) {
+        console.log(
+          `Failing because: First: ${
+            typeof ConceptClass !== "function"
+          }, Second: ${!ConceptClass
+            .name.endsWith("Concept")} name: ${ConceptClass.name}`,
+        );
         console.warn(
           `! No valid concept class found in ${conceptFilePath}. Skipping.`,
         );

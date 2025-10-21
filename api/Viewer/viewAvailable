@@ -1,0 +1,35 @@
+**Description:** Returns a list of all inventory items that are currently marked as available.
+
+**Requirements:**
+- None explicitly defined.
+
+**Effects:**
+- Returns an array containing `Item` objects where the `available` property is `true`.
+
+**Request Body:**
+```json
+{}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "itemName": "string",
+    "lastCheckout": "string | null",
+    "available": "boolean",
+    "lastKerb": "string",
+    "categories": ["string"],
+    "tags": ["string"
+    ]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

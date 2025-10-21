@@ -1,0 +1,30 @@
+**Description:** Escapes a given string according to CSV rules (enclosing in quotes, doubling internal quotes) if it contains commas, double quotes, or newlines.
+
+**Requirements:**
+- The input `s` must be a string.
+
+**Effects:**
+- Returns an array containing a single object with the `escapedString`.
+
+**Request Body:**
+```json
+{
+  "s": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "escapedString": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

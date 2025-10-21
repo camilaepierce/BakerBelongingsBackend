@@ -1,10 +1,10 @@
 {
     "imports": {
         "@concepts/": "./src/concepts/",
-        "@google/generative-ai": "npm:@google/generative-ai@^0.24.1",
         "@utils/": "./src/utils/"
     },
     "tasks": {
-        "concepts": "deno run --allow-net --allow-read --allow-sys --allow-env src/concept_server.ts --port 8000 --baseUrl /api"
+        "concepts": "deno run --allow-net --allow-read --allow-sys --allow-env src/concept_server.ts --port 8000 --baseUrl /api",
+        "cli": "deno run --allow-net --allow-read --allow-sys --allow-env src/main.ts"
     }
 }

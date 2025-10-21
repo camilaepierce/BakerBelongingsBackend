@@ -1,0 +1,31 @@
+**Description:** Returns the full date and time when the specified item was last checked out.
+
+**Requirements:**
+- An item with the specified `itemName` must exist in the inventory.
+- The item must have a `lastCheckout` date recorded.
+
+**Effects:**
+- Returns an array containing a single object with the full `lastCheckout` `Date` object as an ISO 8601 string (e.g., "YYYY-MM-DDTHH:mm:ss.sssZ").
+
+**Request Body:**
+```json
+{
+  "itemName": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "date": "string"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

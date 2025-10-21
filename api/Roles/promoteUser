@@ -1,0 +1,30 @@
+### POST /api/Roles/promoteUser
+
+**Description:** adds user to Role containing given Permission Flag
+
+**Requirements:**
+- user is a valid User, permission is a valid Permission Flag
+
+**Effects:**
+- adds user to Role containing given Permission Flag
+
+**Request Body:**
+```json
+{
+  "user": "string",
+  "permission": "string"
+}
+```
+
+**Success Response Body (Action):**
+```json
+{}
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```
+

@@ -1,4 +1,34 @@
-import { promises as fs } from "node:fs";
+---
+timestamp: 'Mon Oct 20 2025 22:00:55 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251020_220055.87d4ba98.md]]'
+content_id: a8ae9cd7253181d4e941b5231d9ff453741f0da9c4f2f5d3371107f44d70f4f3
+---
+
+# prompt: Now analyze the following Concept Implementation and create an API of these POST requests based on those instructions
+
+* Registering concept: Viewer at /api/Viewer
+  * Endpoint: POST /api/Viewer/loadItems
+  * Endpoint: POST /api/Viewer/saveItems
+  * Endpoint: POST /api/Viewer/viewAvailable
+  * Endpoint: POST /api/Viewer/viewItem
+  * Endpoint: POST /api/Viewer/viewCategory
+  * Endpoint: POST /api/Viewer/viewTag
+  * Endpoint: POST /api/Viewer/viewLastCheckedoutDate
+  * Endpoint: POST /api/Viewer/viewLastCheckedoutFull
+  * Endpoint: POST /api/Viewer/viewAdjacent
+  * Endpoint: POST /api/Viewer/viewAutocomplete
+  * Endpoint: POST /api/Viewer/recommendItems
+  * Endpoint: POST /api/Viewer/parseCsvLine
+  * Endpoint: POST /api/Viewer/escapeCsv
+  * Endpoint: POST /api/Viewer/formatDate
+  * Endpoint: POST /api/Viewer/createAdjacentPrompt
+  * Endpoint: POST /api/Viewer/createAutocompletePrompt
+  * Endpoint: POST /api/Viewer/createRecommendPrompt
+  * Endpoint: POST /api/Viewer/extractNameListFromLLM
+  * Endpoint: POST /api/Viewer/extractJson
+
+```typescript
+  import { promises as fs } from "node:fs";
 import * as path from "node:path";
 import { GeminiLLM } from "../../gemini-llm.ts";
 
@@ -11,7 +41,7 @@ export interface Item {
   tags: string[];
 }
 
-export class InventoryViewer {
+export default class ViewerConcept {
   private items: Item[] = [];
   private csvPath: string;
 
@@ -273,8 +303,9 @@ Return a JSON array of objects with fields: {"itemName": string, "suggestion": s
 // Export a small helper for quick CLI testing (not required by the spec)
 export async function createViewerFromCsv(
   csvPath?: string,
-): Promise<InventoryViewer> {
-  const v = new InventoryViewer(csvPath);
+): Promise<ViewerConcept> {
+  const v = new ViewerConcept(csvPath);
   await v.loadItems();
   return v;
 }
+```
