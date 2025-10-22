@@ -1,7 +1,7 @@
 import * as readline from "node:readline";
 import * as path from "node:path";
 import process from "node:process";
-import { createViewerFromCsv } from "@concepts/Viewer/ViewerConcept.ts";
+import { createViewer } from "@concepts/Viewer/ViewerConcept.ts";
 import {
   InventoryReservationConcept,
   // ReservationConcept,
@@ -21,7 +21,7 @@ async function runCli() {
   const usersPath = path.resolve(process.cwd(), "src/utils/users.csv");
 
   console.log("Loading inventory...");
-  const viewer = await createViewerFromCsv();
+  const viewer = await createViewer();
   const reservation = new InventoryReservationConcept(
     inventoryPath,
     usersPath,

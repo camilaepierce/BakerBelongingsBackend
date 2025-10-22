@@ -1,0 +1,31 @@
+### POST /api/Roles/_getUserPermissions
+
+**Description:** returns the set of all PermissionFlags.
+
+**Requirements:**
+- true
+
+**Effects:**
+- returns the set of all PermissionFlags that exist within the database
+
+**Request Body:**
+```json
+{
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "permissionFlags": "string[]"
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "string"
+}
+```

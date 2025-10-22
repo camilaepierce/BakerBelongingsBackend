@@ -239,15 +239,19 @@ export class InventoryReservationConcept {
     await this.updateInventoryData(header, inventory);
   }
 
-  async notifyCheckout(): Promise<string[]> {
+  /**
+   * Logs a notification message for each overdue item. Accepts a message body.
+   * REST API: POST /api/reservation/notifyCheckout
+   */
+  notifyCheckout(body: { message: string }): string[] {
     const now = new Date();
     const notifiedKerbs: string[] = [];
-
+    const message = body?.message ?? "";
     for (const [itemName, reservation] of this.reservations.entries()) {
       if (reservation.expiry < now) {
         // Item is overdue
         console.log(
-          `sending email to ${reservation.kerb}: Overdue item: ${itemName}, due ${
+          `NOTIFY: ${message} | kerb: ${reservation.kerb} | item: ${itemName} | due: ${
             reservation.expiry.toISOString().slice(0, 10)
           }`,
         );
@@ -287,13 +291,42 @@ export default class ReservationConcept {
   }
 
   async checkoutItem(
-    kerb: string,
-    itemName: string,
-    quantity: number,
+    kerbOrBody: unknown,
+    itemName?: string,
+    quantity?: number,
   ): Promise<void> {
-    if (quantity <= 0) {
-      throw new InvalidQuantityError(quantity);
+    // Support both API object body and positional args
+    let kerb: string;
+    let item: string;
+    let qty: number;
+
+    if (
+      kerbOrBody && typeof kerbOrBody === "object" &&
+      ("kerb" in (kerbOrBody as Record<string, unknown>))
+    ) {
+      const body = kerbOrBody as Record<string, unknown>;
+      kerb = String(body.kerb ?? "").trim();
+      item = String((body.itemName ?? body.item) ?? "").trim();
+      const parsedQty = body.quantity;
+      qty = typeof parsedQty === "number" ? parsedQty : 1;
+    } else {
+      kerb = String(kerbOrBody ?? "").trim();
+      item = String(itemName ?? "").trim();
+      qty = typeof quantity === "number" ? quantity : 1;
     }
+
+    if (!kerb) {
+      throw new UserNotFoundError("(missing kerb)");
+    }
+    if (!item) {
+      throw new ItemNotFoundError("(missing itemName)");
+    }
+    if (qty <= 0) {
+      throw new InvalidQuantityError(qty);
+    }
+
+    // Diagnostics: log pre-state
+    await this.#debugLogItemState("checkout.pre", item);
 
     // Find user and item first to get detailed error messages
     const user = await this.db.collection<DbUser>("users").findOne({ kerb });
@@ -303,24 +336,20 @@ export default class ReservationConcept {
     // Assume all users can checkout for this test, or add specific role checks
     // if (user.role !== "resident") { throw new UserNotFoundError(`Kerb is not a resident: ${kerb}`); }
 
-    const item = await this.db.collection<DbInventoryItem>("items").findOne({
-      itemName,
+    const itemDoc = await this.db.collection<DbInventoryItem>("items").findOne({
+      itemName: item,
     });
-    if (!item) {
-      throw new ItemNotFoundError(itemName);
+    if (!itemDoc) {
+      throw new ItemNotFoundError(item);
     }
 
     // Specific error checks based on item state
-    if (item.lastCheckout !== null) {
-      // Item is currently checked out by *someone*
-      throw new AlreadyCheckedOutError(itemName);
-    }
-
-    if (item.available < quantity) {
+    // Treat item as unavailable if requested quantity exceeds available
+    if (itemDoc.available < qty) {
       throw new InsufficientQuantityError(
-        itemName,
-        quantity,
-        item.available,
+        item,
+        qty,
+        itemDoc.available,
       );
     }
 
@@ -328,12 +357,12 @@ export default class ReservationConcept {
     const result = await this.db.collection<DbInventoryItem>("items")
       .findOneAndUpdate(
         {
-          _id: item._id, // Target specific item by ID to avoid race conditions with itemName
-          available: { $gte: quantity },
-          lastCheckout: null, // Ensure it's not checked out by others in between checks
+          _id: itemDoc._id, // Target specific item by ID to avoid race conditions with itemName
+          available: { $gte: qty },
+          lastKerb: null, // Ensure it is not currently checked out
         },
         {
-          $inc: { available: -quantity },
+          $inc: { available: -qty },
           $set: { lastCheckout: new Date(), lastKerb: kerb },
         },
         { returnDocument: "after" }, // Return the updated document
@@ -343,51 +372,171 @@ export default class ReservationConcept {
       // This case indicates a race condition where another operation changed the item state
       // after our initial findOne but before findOneAndUpdate.
       throw new Error(
-        `Failed to checkout item ${itemName} due to concurrent modification or unexpected state.`,
+        `Failed to checkout item ${item} due to concurrent modification or unexpected state.`,
       );
     }
+
+    // Diagnostics: log post-state
+    await this.#debugLogItemState("checkout.post", item);
   }
 
   // A basic stub for checkinItem to satisfy potential future tests, not fully implemented
   async checkinItem(
-    _kerb: string, // Not used in this basic stub, but could be for permissions
-    itemName: string,
+    kerbOrBody: unknown,
+    itemName?: string,
     quantity: number = 1,
   ): Promise<void> {
-    if (quantity <= 0) {
-      throw new InvalidQuantityError(quantity);
+    // Support API object body: { kerb, item | itemName, quantity }
+    let item: string;
+    let qty: number;
+    if (
+      kerbOrBody && typeof kerbOrBody === "object" &&
+      ("item" in (kerbOrBody as Record<string, unknown>) ||
+        "itemName" in (kerbOrBody as Record<string, unknown>))
+    ) {
+      const body = kerbOrBody as Record<string, unknown>;
+      item = String((body.itemName ?? body.item) ?? "").trim();
+      const parsedQty = body.quantity;
+      qty = typeof parsedQty === "number" ? parsedQty : 1;
+    } else {
+      item = String(itemName ?? "").trim();
+      qty = typeof quantity === "number" ? quantity : 1;
     }
 
-    const item = await this.db.collection<DbInventoryItem>("items").findOne(
-      { itemName },
+    if (!item) {
+      throw new ItemNotFoundError("(missing itemName)");
+    }
+    if (qty <= 0) {
+      throw new InvalidQuantityError(qty);
+    }
+
+    // Diagnostics: log pre-state
+    await this.#debugLogItemState("checkin.pre", item);
+
+    const itemDoc = await this.db.collection<DbInventoryItem>("items").findOne(
+      { itemName: item },
       { projection: { available: 1, lastCheckout: 1, lastKerb: 1 } },
     );
 
-    if (!item) {
-      throw new ItemNotFoundError(itemName);
+    if (!itemDoc) {
+      throw new ItemNotFoundError(item);
     }
 
-    if (item.lastCheckout === null) {
+    // If no current holder, it's not checked out
+    if (itemDoc.lastKerb === null) {
       throw new AlreadyCheckedOutError(
-        itemName,
+        item,
       ); // Reusing error
     }
 
     // Assuming a simple checkin: increment available, clear lastCheckout/lastKerb
     const updateResult = await this.db.collection<DbInventoryItem>("items")
       .updateOne(
-        { _id: item._id, lastCheckout: { $ne: null } }, // Ensure it was checked out
+        { _id: itemDoc._id, lastKerb: { $ne: null } }, // Ensure it was checked out
         {
-          $inc: { available: quantity },
+          $inc: { available: qty },
           $set: { lastCheckout: null, lastKerb: null },
         },
       );
 
     if (updateResult.matchedCount === 0) {
       throw new Error(
-        `Failed to checkin ${itemName}, possibly due to race condition or invalid state.`,
+        `Failed to checkin ${item}, possibly due to race condition or invalid state.`,
+      );
+    }
+
+    // Diagnostics: log post-state
+    await this.#debugLogItemState("checkin.post", item);
+  }
+  // TODO: Implement notifyCheckout for MongoDB if required
+
+  /**
+   * Diagnostic: return state of a specific item. Accessible over REST.
+   */
+  async debugItemState(
+    input: string | { itemName?: string; item?: string },
+  ): Promise<
+    {
+      itemName: string;
+      available: number;
+      lastKerb: string | null;
+      lastCheckout: Date | null;
+    } | { error: string }
+  > {
+    const name =
+      (typeof input === "string"
+        ? input
+        : (input?.itemName ?? input?.item ?? "")).trim();
+    if (!name) return { error: "Missing itemName" };
+    const doc = await this.db.collection<DbInventoryItem>("items").findOne(
+      { itemName: name },
+      {
+        projection: { itemName: 1, available: 1, lastKerb: 1, lastCheckout: 1 },
+      },
+    );
+    if (!doc) return { error: `Item not found: ${name}` };
+    return {
+      itemName: doc.itemName,
+      available: doc.available,
+      lastKerb: doc.lastKerb,
+      lastCheckout: doc.lastCheckout,
+    };
+  }
+
+  /**
+   * Diagnostic: list states for all items. Accessible over REST.
+   */
+  async debugAllItemStates(): Promise<
+    Array<
+      {
+        itemName: string;
+        available: number;
+        lastKerb: string | null;
+        lastCheckout: Date | null;
+      }
+    >
+  > {
+    const docs = await this.db.collection<DbInventoryItem>("items").find(
+      {},
+      {
+        projection: { itemName: 1, available: 1, lastKerb: 1, lastCheckout: 1 },
+      },
+    ).toArray();
+    return docs.map((d) => ({
+      itemName: d.itemName,
+      available: d.available,
+      lastKerb: d.lastKerb,
+      lastCheckout: d.lastCheckout,
+    }));
+  }
+
+  // Internal helper to log state for an item
+  async #debugLogItemState(label: string, itemName: string): Promise<void> {
+    try {
+      const doc = await this.db.collection<DbInventoryItem>("items").findOne(
+        { itemName },
+        {
+          projection: {
+            itemName: 1,
+            available: 1,
+            lastKerb: 1,
+            lastCheckout: 1,
+          },
+        },
+      );
+      console.log("[ReservationConcept]", label, {
+        itemName: doc?.itemName ?? itemName,
+        available: doc?.available,
+        lastKerb: doc?.lastKerb,
+        lastCheckout: doc?.lastCheckout,
+      });
+    } catch (e) {
+      console.warn(
+        "[ReservationConcept] debugLogItemState failed",
+        label,
+        itemName,
+        e,
       );
     }
   }
-  // TODO: Implement notifyCheckout for MongoDB if required
 }

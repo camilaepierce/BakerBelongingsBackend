@@ -4,7 +4,7 @@
  * Demonstrates both manual viewing and checkout and LLM-assisted viewing
  */
 
-import { createViewerFromCsv } from "./ViewerConcept.ts";
+import { createViewer } from "./ViewerConcept.ts";
 import { InventoryReservationConcept } from "../Reservation/ReservationConcept.ts";
 import * as path_deno from "https://deno.land/std@0.208.0/path/mod.ts";
 // Deno std library for assertions
@@ -123,7 +123,7 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
     paths = await setupTestFiles();
     const csvPath = paths.inventory;
 
-    const v = await createViewerFromCsv();
+    const v = await createViewer();
 
     await t.step("viewAvailable returns an array of items", () => {
       const available = v.viewAvailable();
@@ -131,8 +131,8 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
       assert(available.length > 0, "viewAvailable should return some items");
     });
 
-    await t.step("viewItem retrieves a known item correctly", () => {
-      const item = v.viewItem("Music Room Key");
+    await t.step("viewItem retrieves a known item correctly", async () => {
+      const item = await v.viewItem("Music Room Key");
       assertEquals(
         item.itemName,
         "Music Room Key",
@@ -140,16 +140,16 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
       );
     });
 
-    await t.step("viewCategory finds items for a valid category", () => {
-      const games = v.viewCategory("Games");
+    await t.step("viewCategory finds items for a valid category", async () => {
+      const games = await v.viewCategory("Games");
       assert(
         games.length > 0,
         "viewCategory should find items in 'Games' category",
       );
     });
 
-    await t.step("viewTag finds items for a valid tag", () => {
-      const tagSearch = v.viewTag("key");
+    await t.step("viewTag finds items for a valid tag", async () => {
+      const tagSearch = await v.viewTag("key");
       assert(tagSearch.length > 0, "viewTag should find items with 'key' tag");
     });
 
@@ -184,7 +184,7 @@ Deno.test("InventoryViewer: LLM-Assisted Queries", async (t) => {
     paths = await setupTestFiles();
     const csvPath = paths.inventory;
 
-    const v = await createViewerFromCsv();
+    const v = await createViewer();
     const llm = await createLlmFromConfig();
 
     // If the LLM returns the empty-fallback, use a deterministic fake for these tests
@@ -262,8 +262,8 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
     const inventoryPath = paths.inventory;
     const usersPath = paths.users;
 
-    const v1 = await createViewerFromCsv();
-    const avail = v1.viewAvailable();
+    const v1 = await createViewer();
+    const avail = await v1.viewAvailable();
     assert(
       avail.length >= 1,
       "Need at least one available item for mixed flow tests",
@@ -276,8 +276,10 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
 
     await t.step("item becomes unavailable after checkout", async () => {
       await r.checkoutItem(kerb, chosen, 1);
-      const v2 = await createViewerFromCsv(); // Reload viewer to reflect changes
-      const stillAvail = v2.viewAvailable().some((i) => i.itemName === chosen);
+      const v2 = await createViewer(); // Reload viewer to reflect changes
+      const stillAvail = (await v2.viewAvailable()).some((i) =>
+        i.itemName === chosen
+      );
       assert(!stillAvail, "Item should be unavailable after checkout");
     });
   } finally {
@@ -294,8 +296,8 @@ Deno.test("LLM Mixed Flow", async (t) => {
     const inventoryPath = paths.inventory;
     const usersPath = paths.users;
 
-    const viewer = await createViewerFromCsv();
-    const available = viewer.viewAvailable();
+    const viewer = await createViewer();
+    const available = await viewer.viewAvailable();
     assert(
       available.length >= 2,
       "Need at least 2 available items for concurrency test",

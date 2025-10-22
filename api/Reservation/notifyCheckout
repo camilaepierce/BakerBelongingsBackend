@@ -1,24 +1,34 @@
-**Description:** Triggers the process to send reminder emails to users for items that are overdue.
+# Reservation API: notifyCheckout
 
-**Requirements:**
-- true (This action can always be performed, and its effects depend on the state of reservations.)
+**Endpoint:** `POST /api/reservation/notifyCheckout`
 
-**Effects:**
-- Sends an email to the `kerb` associated with each overdue item, as a reminder to check the item back in.
+**Description:** Logs a notification message for each overdue item. The request body should include a `message` field, which will be logged as the content of the notification. No email is sent.
 
 **Request Body:**
 ```json
-{}
-```
-
-**Success Response Body (Action):**
-```json
-{}
-```
-
-**Error Response Body:**
-```json
 {
-  "error": "string"
+  "message": "string"
 }
 ```
+
+**Response:**
+- `200 OK`: Array of kerb identifiers notified
+  - Content-Type: application/json
+  - Schema:
+    ```json
+    ["kerb1", "kerb2", ...]
+    ```
+
+**Example Request:**
+```json
+{
+  "message": "Reminder: Please return your overdue items."
+}
+```
+
+**Example Response:**
+```json
+["jdoe", "asmith"]
+```
+
+**Tags:** Reservation

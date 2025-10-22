@@ -1,6 +1,6 @@
 import { Collection, Db } from "npm:mongodb";
 import { Empty, ID } from "@utils/types.ts";
-import { freshID } from "@utils/database.ts";
+import { freshID, getDb, User as DbUser } from "@utils/database.ts";
 
 // Declare collection prefix using the concept name
 const PREFIX = "Roles" + ".";
@@ -40,12 +40,22 @@ interface PermissionFlagDocument {
  */
 export default class RolesConcept {
   // MongoDB collections for the concept's state
-  private userRoles: Collection<UserRoles>;
-  private permissionFlags: Collection<PermissionFlagDocument>;
+  private userRoles!: Collection<UserRoles>;
+  private permissionFlags!: Collection<PermissionFlagDocument>;
+  private users!: Collection<DbUser>; // Underlying Users collection
+  private db!: Db;
+  private dbReady: Promise<void>;
 
-  constructor(private readonly db: Db) {
-    this.userRoles = this.db.collection(PREFIX + "userRoles");
-    this.permissionFlags = this.db.collection(PREFIX + "permissionFlags");
+  constructor() {
+    this.dbReady = (async () => {
+      const [db] = await getDb();
+      if (db instanceof Db) {
+        this.db = db;
+      }
+      this.userRoles = this.db.collection(PREFIX + "userRoles");
+      this.permissionFlags = this.db.collection(PREFIX + "permissionFlags");
+      this.users = this.db.collection<DbUser>("users");
+    })();
   }
 
   // --- Internal Helper Actions (for managing Permission Flags, not user-facing concept actions) ---
@@ -61,6 +71,7 @@ export default class RolesConcept {
   async createPermissionFlag(
     { name, actions }: { name: string; actions: Action[] },
   ): Promise<{ permissionFlag: PermissionFlag } | { error: string }> {
+    await this.dbReady;
     if (await this.permissionFlags.findOne({ name })) {
       return { error: `Permission Flag with name '${name}' already exists.` };
     }
@@ -87,6 +98,7 @@ export default class RolesConcept {
       newActions: Action[];
     },
   ): Promise<Empty | { error: string }> {
+    await this.dbReady;
     const result = await this.permissionFlags.updateOne(
       { _id: permission },
       { $addToSet: { actions: { $each: newActions } } },
@@ -111,6 +123,7 @@ export default class RolesConcept {
       actionsToRemove: Action[];
     },
   ): Promise<Empty | { error: string }> {
+    await this.dbReady;
     const result = await this.permissionFlags.updateOne(
       { _id: permission },
       { $pullAll: { actions: actionsToRemove } },
@@ -134,6 +147,7 @@ export default class RolesConcept {
   async promoteUser(
     { user, permission }: { user: User; permission: PermissionFlag },
   ): Promise<Empty | { error: string }> {
+    await this.dbReady;
     // Check if permission is valid
     const permissionExists = await this.permissionFlags.findOne({
       _id: permission,
@@ -163,6 +177,7 @@ export default class RolesConcept {
   async demoteUser(
     { user, permission }: { user: User; permission: PermissionFlag },
   ): Promise<Empty | { error: string }> {
+    await this.dbReady;
     // Check if permission is valid
     const permissionExists = await this.permissionFlags.findOne({
       _id: permission,
@@ -207,6 +222,7 @@ export default class RolesConcept {
   async allowAction(
     { user, action }: { user: User; action: Action },
   ): Promise<{ allowed: boolean } | { error: string }> {
+    await this.dbReady;
     // Find the user's roles
     const userRoleDoc = await this.userRoles.findOne({ _id: user });
 
@@ -240,7 +256,9 @@ export default class RolesConcept {
   async _getUserPermissions(
     { user }: { user: User },
   ): Promise<{ permissionFlags: PermissionFlag[] }[] | { error: string }> {
+    await this.dbReady;
     const userRoleDoc = await this.userRoles.findOne({ _id: user });
+    if (!userRoleDoc) console.log("no userRoleDoc?");
     return [{ permissionFlags: userRoleDoc?.permissionFlags || [] }];
   }
 
@@ -254,6 +272,7 @@ export default class RolesConcept {
   async _getPermissionFlagActions(
     { permission }: { permission: PermissionFlag },
   ): Promise<{ actions: Action[] }[] | { error: string }> {
+    await this.dbReady;
     const permissionDoc = await this.permissionFlags.findOne({
       _id: permission,
     });
@@ -273,6 +292,7 @@ export default class RolesConcept {
   async _listAllPermissionFlags(): Promise<
     { id: PermissionFlag; name: string; actions: Action[] }[]
   > {
+    await this.dbReady;
     const flags = await this.permissionFlags.find({}).toArray();
     return flags.map((flag) => ({
       id: flag._id,

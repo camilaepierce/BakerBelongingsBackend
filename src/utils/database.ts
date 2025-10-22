@@ -36,6 +36,7 @@ async function initMongoClient() {
   } catch (e) {
     throw new Error("MongoDB connection failed: " + e);
   }
+  console.log("Successfully initializing MongoClient");
   return client;
 }
 

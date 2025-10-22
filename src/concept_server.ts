@@ -3,7 +3,7 @@ import { getDb } from "@utils/database.ts";
 import { walk } from "jsr:@std/fs";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { toFileUrl } from "jsr:@std/path/to-file-url";
-import { createViewerFromCsv } from "@concepts/Viewer/ViewerConcept.ts";
+import { createViewer } from "@concepts/Viewer/ViewerConcept.ts";
 
 // Parse command-line arguments for port and base URL
 const flags = parseArgs(Deno.args, {
@@ -68,6 +68,16 @@ async function main() {
       console.log(
         `- Registering concept: ${conceptName} at ${BASE_URL}/${conceptApiName}`,
       );
+
+      // If the concept has a loadItems method, eagerly load data for REST usage
+      if (typeof instance.loadItems === "function") {
+        try {
+          await instance.loadItems();
+          console.log(`  - Preloaded data for ${conceptName}`);
+        } catch (e) {
+          console.warn(`  - Failed to preload data for ${conceptName}:`, e);
+        }
+      }
 
       const methodNames = Object.getOwnPropertyNames(
         Object.getPrototypeOf(instance),
