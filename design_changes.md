@@ -15,3 +15,9 @@
 *   [UserNotFoundError previously nonexistent](context/design/brainstorming/questioning.md/steps/prompt.600ddf68.md)
 5. assertTrue was a completely made up function from jsr:@std/assert", even though the basic 'assert' offered precisely the functionality the LLM was likely looking for. Furthermore, the arguments that were being attempted to pass into assertTrue were themselves causing syntax errors.
 *   [assertTrue](context/design/brainstorming/questioning.md/steps/response.dcf8f3aa.md)
+
+# Design Changes, Cont.
+1. Generally, the font and color scheme were updated to better match the intended atmosphere of the application. 
+2. Updated in the frontend repository, different views and components were hidden depending on the restrictions of the user. Previously, all of the pages were available in the navigation bar, but now those pages are only visible if the permissions are high enough. For example, someone who works desk can see the management page, and a houseteam member can see the permissions page.
+3. The search type options are decreased, to better improve the user's flow and recommended actions. The autocomplete capability has been morphed to be included with searching for the item name, as opposed to requiring a precise hit in the database.
+4. Full log-in/log-out functionality has been implemented, with the Authorization concept syncing with the Role concept to allow for access to certain actions.

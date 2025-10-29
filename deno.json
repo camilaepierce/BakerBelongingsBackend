@@ -5,6 +5,7 @@
     },
     "tasks": {
         "concepts": "deno run --allow-net --allow-read --allow-sys --allow-env src/concept_server.ts --port 8000 --baseUrl /api",
-        "cli": "deno run --allow-net --allow-read --allow-sys --allow-env src/main.ts"
+        "cli": "deno run --allow-net --allow-read --allow-sys --allow-env src/main.ts",
+        "seed:flags": "deno run --allow-env --allow-net --allow-read src/dev/seedPermissionFlags.ts"
     }
 }

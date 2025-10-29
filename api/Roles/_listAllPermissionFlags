@@ -1,31 +1,46 @@
-### POST /api/Roles/_getUserPermissions
+### POST /api/Roles/_listAllPermissionFlags
 
-**Description:** returns the set of all PermissionFlags.
+**Description:** Returns a list of all defined Permission Flags with their details.
 
 **Requirements:**
 - true
 
 **Effects:**
-- returns the set of all PermissionFlags that exist within the database
+- Returns the complete set of all PermissionFlags that exist within the database, including their IDs, names, and associated actions.
 
 **Request Body:**
 ```json
-{
-}
+{}
 ```
 
 **Success Response Body (Query):**
 ```json
 [
   {
-    "permissionFlags": "string[]"
+    "id": "string",
+    "name": "string",
+    "actions": ["string"]
   }
 ]
 ```
 
-**Error Response Body:**
+**Example Response:**
 ```json
-{
-  "error": "string"
-}
+[
+  {
+    "id": "Admin",
+    "name": "Admin",
+    "actions": ["inventory.manage", "roles.manage", "reservation.checkout", "reservation.checkin"]
+  },
+  {
+    "id": "DeskStaff",
+    "name": "DeskStaff",
+    "actions": ["reservation.checkout", "reservation.checkin"]
+  },
+  {
+    "id": "Viewer",
+    "name": "Viewer",
+    "actions": []
+  }
+]
 ```

@@ -1,10 +1,12 @@
-**Description:** Returns a single inventory item matching the given item name (case-insensitive).
+````plaintext
+**Description:** Returns inventory items matching the given item name (case-insensitive). Returns an empty array if no matching item is found.
 
 **Requirements:**
-- An item with the specified `itemName` must exist in the inventory.
+- None (will return empty array if item not found).
 
 **Effects:**
 - Returns an array containing the `Item` object that exactly matches the `itemName`.
+- Returns an empty array if no item matches the given name.
 
 **Request Body:**
 ```json
@@ -22,11 +24,12 @@
     "available": "boolean",
     "lastKerb": "string",
     "categories": ["string"],
-    "tags": ["string"
-    ]
+    "tags": ["string"]
   }
 ]
 ```
+
+**Note:** The response is always an array. It will contain exactly one item if a match is found, or be empty ([]) if no match is found.
 
 **Error Response Body:**
 ```json
@@ -34,3 +37,5 @@
   "error": "string"
 }
 ```
+
+````

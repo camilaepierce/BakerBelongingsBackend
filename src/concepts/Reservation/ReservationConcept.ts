@@ -359,7 +359,6 @@ export default class ReservationConcept {
         {
           _id: itemDoc._id, // Target specific item by ID to avoid race conditions with itemName
           available: { $gte: qty },
-          lastKerb: null, // Ensure it is not currently checked out
         },
         {
           $inc: { available: -qty },

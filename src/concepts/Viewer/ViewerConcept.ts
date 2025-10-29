@@ -46,7 +46,6 @@ export default class ViewerConcept {
       } else {
         throw Error("MongoDB not returning MongoClient");
       }
-      populateInitialData(this.db);
     })();
 
     // Auto-load items once DB is ready (useful for REST server usage)
@@ -94,6 +93,11 @@ export default class ViewerConcept {
   async loadItems(): Promise<void> {
     try {
       await this.dbReady; // Ensure DB is initialized
+      // Populate initial data only if the items collection is empty
+      const itemCount = await this.db.collection("items").countDocuments();
+      if (itemCount === 0) {
+        await populateInitialData(this.db);
+      }
       const dbItems = await this.db.collection<DbInventoryItem>("items").find()
         .toArray();
       this.items = dbItems.map(this.mapDbInventoryItemToItem);
@@ -138,7 +142,7 @@ export default class ViewerConcept {
     return this.items.filter((i) => !i.available);
   }
 
-  async viewItem(itemName: string): Promise<Item> {
+  async viewItem(itemName: string): Promise<Item[]> {
     await this.ensureItemsLoaded();
     // Accept either a string or an object with itemName property
     let name: string;
@@ -156,13 +160,10 @@ export default class ViewerConcept {
     }
     name = name.trim().toLowerCase();
     console.log("viewItem called with:", name);
-    console.log(
-      "Filtered items:",
-      this.items.find((i) => i.itemName.trim().toLowerCase() == name),
-    );
     const it = this.items.find((i) => i.itemName.trim().toLowerCase() == name);
-    if (!it) throw new Error(`Item not found: ${name}`);
-    return it;
+    console.log("Filtered items:", it);
+    if (!it) return [];
+    return [it];
   }
 
   async viewCategory(
@@ -199,7 +200,11 @@ export default class ViewerConcept {
     const name = typeof itemName === "string"
       ? itemName
       : (itemName?.itemName ?? itemName?.item ?? "");
-    const it = await this.viewItem(name);
+    const items = await this.viewItem(name);
+    if (items.length === 0) {
+      throw new Error(`Item not found: ${name}`);
+    }
+    const it = items[0];
     if (!it.lastCheckout) {
       throw new Error(`No lastCheckout recorded for ${name}`);
     }
@@ -213,7 +218,11 @@ export default class ViewerConcept {
     const name = typeof itemName === "string"
       ? itemName
       : (itemName?.itemName ?? itemName?.item ?? "");
-    const it = await this.viewItem(name);
+    const items = await this.viewItem(name);
+    if (items.length === 0) {
+      throw new Error(`Item not found: ${name}`);
+    }
+    const it = items[0];
     if (!it.lastCheckout) {
       throw new Error(`No lastCheckout recorded for ${name}`);
     }
@@ -309,19 +318,31 @@ export default class ViewerConcept {
         i.tags.join(";")
       }`
     ).join("\n");
-    return `You are an assistant that, given a target inventory item, returns a JSON array of itemName strings representing the most similar items from the inventory.
-Target item:\n${target.itemName} | categories:${
-      target.categories.join(";")
-    } | tags:${target.tags.join(";")}
+    return `You are an assistant that, given a target inventory item, returns similar items from the inventory.
 
-INVENTORY:\n${inventorySummary}
+Target item:
+${target.itemName} | categories:${target.categories.join(";")} | tags:${
+      target.tags.join(";")
+    }
 
-Return exactly a JSON array of itemName strings, in order of similarity.`;
+INVENTORY:
+${inventorySummary}
+
+Return ONLY a valid JSON array (no markdown, no code blocks) of itemName strings, in order of similarity.
+Example: ["Item A", "Item B", "Item C"]`;
   }
 
   private createAutocompletePrompt(prefix: string): string {
     const names = this.items.map((i) => i.itemName).join("\n");
-    return `You are an assistant that returns up to 8 item names from the inventory that best match the user's partial input. User input: "${prefix}"\nINVENTORY NAMES:\n${names}\nReturn exactly a JSON array of matching itemName strings.`;
+    return `You are an assistant that returns up to 8 item names from the inventory that best match the user's partial input.
+
+User input: "${prefix}"
+
+INVENTORY NAMES:
+${names}
+
+Return ONLY a valid JSON array (no markdown, no code blocks) of matching itemName strings.
+Example: ["Item A", "Item B"]`;
   }
 
   private createRecommendPrompt(interests: string): string {
@@ -331,9 +352,16 @@ Return exactly a JSON array of itemName strings, in order of similarity.`;
       tags: i.tags,
       categories: i.categories,
     }));
-    return `You are an assistant that recommends inventory items for a user based on their interests. INTERESTS: ${interests}\n
-INVENTORY SAMPLE:\n${JSON.stringify(shortList, null, 2)}\n
-Return a JSON array of objects with fields: {"itemName": string, "suggestion": string} where suggestion is a one-sentence activity idea using the item that matches the interests. Return only JSON.`;
+    return `You are an assistant that recommends inventory items for a user based on their interests. 
+INTERESTS: ${interests}
+
+INVENTORY SAMPLE:
+${JSON.stringify(shortList, null, 2)}
+
+Return ONLY a valid JSON array (no markdown, no code blocks, just raw JSON) of objects with fields: {"itemName": string, "suggestion": string} where suggestion is a one-sentence activity idea using the item that matches the interests.
+
+Example format:
+[{"itemName": "Basketball", "suggestion": "Great for team sports and staying active"}, {"itemName": "Frisbee", "suggestion": "Perfect for outdoor games with friends"}]`;
   }
 
   /**
@@ -359,11 +387,21 @@ Return a JSON array of objects with fields: {"itemName": string, "suggestion": s
   }
 
   private extractJson(text: string): unknown {
-    const match = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-    if (!match) throw new Error("No JSON found in LLM response");
+    // Remove markdown code blocks if present (```json ... ``` or ``` ... ```)
+    const cleaned = text.replace(/```(?:json)?\s*([\s\S]*?)```/g, "$1").trim();
+
+    // Try to find JSON object or array in the cleaned text
+    const match = cleaned.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (!match) {
+      console.error("extractJson failed. LLM response:", text);
+      throw new Error("No JSON found in LLM response");
+    }
+
     try {
       return JSON.parse(match[0]) as unknown;
-    } catch (_e) {
+    } catch (e) {
+      console.error("extractJson parse failed. Extracted text:", match[0]);
+      console.error("Parse error:", e);
       throw new Error("Failed to parse JSON from LLM response");
     }
   }

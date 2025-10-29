@@ -100,7 +100,7 @@ async function setupTestEnvironment(): Promise<{
   houseTeamUser: TestUser;
 }> {
   const [db, client] = await testDb();
-  const rolesConcept = new RolesConcept();
+  const rolesConcept = new RolesConcept(db);
   const testUsers = await populateTestUsers(db);
 
   // Identify specific users from the populated data for consistent testing

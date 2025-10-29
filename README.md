@@ -139,11 +139,69 @@ Inside the `steps` directory one layer deeper are granular files of the form `st
 
 You're now ready to create the context that you need to implement concepts with (or without) the aid of an LLM! We've provided you with a number of documents/prompts in `design/background`, each its own self-contained bit of knowledge about concept design in general and implementing them in TypeScript. 
 
-- `design/background`: Background knowledge that you should treat as both prompts and documentation for you to read about concept design. Feel free to add any additional background documents that you think are good prompts. Also, if you think you can contribute, you may also edit any existing prompts and point them out!
-- `design/brainstorm`: Plan, chat with an LLM, use as a scratch pad - create and synthesize context about your potential ideas.
-- `design/concepts`: Place your actual concept spec documents here. Feel free to copy a whole document from `brainstorm` if you started there and trim down, or simply mutate in place (with `ctx prompt` or `ctx save` throughout).
-- `design/learning`: When you feel like you've learned something significant, such as important decisions or caveats/challenges you encounter, record them here. **Tip:** you can always copy an entire document from another place (like `brainstorm`), add a `# summarize: extract the important lessons from everything above`, followed by a `ctx prompt`, then simply delete the original parts.
 
+## Development server and seeding
+
+This repo includes a small HTTP server that dynamically exposes each Concept as REST endpoints and auto-seeds dev data to make local testing easy.
+
+### Run the server
+
+- Ensure your `.env` has valid Mongo settings: `MONGODB_URL` and `DB_NAME`.
+- Start the server:
+	- `deno task concepts`
+	- Serves on http://localhost:8000 by default (override with `--port`), routes mounted at `/api`.
+
+Key file paths:
+- Server: `src/concept_server.ts`
+- Concepts (auto-registered): `src/concepts/**/<Name>Concept.ts`
+
+### Dev data seeding (users + flags)
+
+On server startup, the following seeding runs automatically in non-test environments:
+
+- Users are upserted from `src/utils/users.csv` with a uniform password for easy logins during development:
+	- Password: `testpassword123`
+	- Script: `src/dev/seedUsers.ts`
+	- Controlled by env:
+		- `NODE_ENV=test` disables all seeding during tests
+		- `DEV_SEED=false` forces seeding off even in development
+
+- Permission flags are ensured (created if missing) to match the three-tier RBAC model:
+	- Resident: `inventory.view`
+	- Desk: `inventory.view`, `management.view`, `reservation.checkout`, `reservation.checkin`
+	- Houseteam: `inventory.view`, `management.view`, `permissions.view`, `permissions.manage`, `reservation.checkout`, `reservation.checkin`
+	- Ensurer: `RolesConcept.ensureReferenceFlagsAndActions()`
+
+You can also run a dedicated flags seeder to re-initialize and clean up legacy flags:
+
+- `deno task seed:flags` → runs `src/dev/seedPermissionFlags.ts`
+
+### Deno tasks
+
+Defined in `deno.json`:
+- `deno task concepts` — run the concept server
+- `deno task cli` — run the CLI program (`src/main.ts`)
+- `deno task seed:flags` — upsert canonical permission flags and delete legacy ones
+
+### RBAC API contract (for frontend integration)
+
+Endpoints and response shapes of interest:
+- `POST /api/Authorization/login` → returns `{ success, kerb, token, userId }`
+- `POST /api/Authorization/whoami` → returns `{ userId, kerb, flags: string[], actions: string[] }`
+- `POST /api/Roles/_listAllPermissionFlags` → returns `[{ id: string, name: string, actions: string[] }]`
+- `POST /api/Roles/_getPermissionFlagActions` → returns `[{ actions: string[] }]` or `{ error }`
+
+See the `api/` folder for detailed docs and examples:
+- `api/Authorization/login.md`
+- `api/Roles/_listAllPermissionFlags`
+- `api/Roles/_getPermissionFlagActions`
+- `api/RBAC_INTEGRATION.md`
+
+### Notes and troubleshooting
+
+- Tests use an isolated database (`test-<DB_NAME>`) and automatically skip all dev seeding.
+- If you see MongoDB topology/pool closed warnings during rapid test runs, they’re benign side-effects of closing clients between tests; rerunning typically clears them.
+- To skip dev user seeding at server start (e.g., on staging), set `DEV_SEED=false` in the environment.
 ### Task:
 
 Implement your concepts, either using LLM assistance through `ctx prompt`, or implementing by hand and documenting your progress with `ctx save`. The following tips may help:

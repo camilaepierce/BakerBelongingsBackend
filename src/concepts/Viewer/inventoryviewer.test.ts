@@ -4,15 +4,14 @@
  * Demonstrates both manual viewing and checkout and LLM-assisted viewing
  */
 
-import { createViewer } from "./ViewerConcept.ts";
-import { InventoryReservationConcept } from "../Reservation/ReservationConcept.ts";
+import ViewerConcept, { createViewer } from "./ViewerConcept.ts";
+import ReservationConcept from "../Reservation/ReservationConcept.ts";
 import * as path_deno from "https://deno.land/std@0.208.0/path/mod.ts";
 // Deno std library for assertions
 import {
   assert,
   assertArrayIncludes,
   assertEquals,
-  assertThrows,
 } from "https://deno.land/std@0.208.0/assert/mod.ts";
 import {
   AlreadyCheckedOutError,
@@ -30,6 +29,8 @@ import * as fs from "node:fs/promises";
 import * as process from "node:process"; // For process.cwd()
 
 import { GeminiLLM } from "../../gemini-llm.ts";
+import { getDb } from "../../utils/database.ts";
+import type { Db, MongoClient } from "npm:mongodb";
 
 /**
  * Create an LLM instance from config.json in the repo root.
@@ -117,24 +118,31 @@ async function teardownTestFiles(paths: TestFilePaths) {
 
 // --- Deno Test Structure ---
 
-Deno.test("InventoryViewer: Basic Queries", async (t) => {
+Deno.test({
+  name: "InventoryViewer: Basic Queries",
+  sanitizeOps: false,
+  sanitizeResources: false,
+}, async (t) => {
   let paths: TestFilePaths | undefined;
+  let viewerToClose: ViewerConcept | undefined;
   try {
     paths = await setupTestFiles();
-    const csvPath = paths.inventory;
+    const _csvPath = paths.inventory;
 
     const v = await createViewer();
+    viewerToClose = v;
 
-    await t.step("viewAvailable returns an array of items", () => {
-      const available = v.viewAvailable();
+    await t.step("viewAvailable returns an array of items", async () => {
+      const available = await v.viewAvailable();
       assert(Array.isArray(available), "viewAvailable should return an array");
       assert(available.length > 0, "viewAvailable should return some items");
     });
 
     await t.step("viewItem retrieves a known item correctly", async () => {
-      const item = await v.viewItem("Music Room Key");
+      const items = await v.viewItem("Music Room Key");
+      assertEquals(items.length, 1, "viewItem should return exactly one item");
       assertEquals(
-        item.itemName,
+        items[0].itemName,
         "Music Room Key",
         "viewItem returned the wrong item",
       );
@@ -153,18 +161,22 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
       assert(tagSearch.length > 0, "viewTag should find items with 'key' tag");
     });
 
-    await t.step("viewItem throws an error for a non-existent item", () => {
-      assertThrows(
-        () => {
-          v.viewItem("This Item Does Not Exist");
-        },
-      );
-    });
+    await t.step(
+      "viewItem returns an empty array for a non-existent item",
+      async () => {
+        const items = await v.viewItem("This Item Does Not Exist");
+        assertEquals(
+          items.length,
+          0,
+          "viewItem should return empty array for non-existent item",
+        );
+      },
+    );
 
     await t.step(
       "viewCategory returns an empty array for a non-existent category",
-      () => {
-        const emptyCat = v.viewCategory("NoSuchCategory");
+      async () => {
+        const emptyCat = await v.viewCategory("NoSuchCategory");
         assert(
           Array.isArray(emptyCat) && emptyCat.length === 0,
           "viewCategory should return an empty array for an unknown category",
@@ -175,16 +187,25 @@ Deno.test("InventoryViewer: Basic Queries", async (t) => {
     if (paths) {
       await teardownTestFiles(paths);
     }
+    if (viewerToClose) {
+      await viewerToClose.closeDb();
+    }
   }
 });
 
-Deno.test("InventoryViewer: LLM-Assisted Queries", async (t) => {
+Deno.test({
+  name: "InventoryViewer: LLM-Assisted Queries",
+  sanitizeOps: false,
+  sanitizeResources: false,
+}, async (t) => {
   let paths: TestFilePaths | undefined;
+  let viewerToClose: ViewerConcept | undefined;
   try {
     paths = await setupTestFiles();
-    const csvPath = paths.inventory;
+    const _csvPath = paths.inventory;
 
     const v = await createViewer();
+    viewerToClose = v;
     const llm = await createLlmFromConfig();
 
     // If the LLM returns the empty-fallback, use a deterministic fake for these tests
@@ -252,15 +273,22 @@ Deno.test("InventoryViewer: LLM-Assisted Queries", async (t) => {
     if (paths) {
       await teardownTestFiles(paths);
     }
+    if (viewerToClose) {
+      await viewerToClose.closeDb();
+    }
   }
 });
 
-Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
+Deno.test({
+  name: "Mixed Flow: Viewer and Reservation Interaction",
+  sanitizeOps: false,
+  sanitizeResources: false,
+}, async (t) => {
   let paths: TestFilePaths | undefined;
   try {
     paths = await setupTestFiles();
-    const inventoryPath = paths.inventory;
-    const usersPath = paths.users;
+    const _inventoryPath = paths.inventory;
+    const _usersPath = paths.users;
 
     const v1 = await createViewer();
     const avail = await v1.viewAvailable();
@@ -272,7 +300,8 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
     const chosen = avail[0].itemName;
     const kerb = "camjohnson";
 
-    const r = new InventoryReservationConcept(inventoryPath, usersPath, 1);
+    const [db, client] = await getDb() as unknown as [Db, MongoClient];
+    const r = new ReservationConcept(db);
 
     await t.step("item becomes unavailable after checkout", async () => {
       await r.checkoutItem(kerb, chosen, 1);
@@ -281,6 +310,9 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
         i.itemName === chosen
       );
       assert(!stillAvail, "Item should be unavailable after checkout");
+      await v2.closeDb();
+      await v1.closeDb();
+      await client.close();
     });
   } finally {
     if (paths) {
@@ -289,14 +321,19 @@ Deno.test("Mixed Flow: Viewer and Reservation Interaction", async (t) => {
   }
 });
 
-Deno.test("LLM Mixed Flow", async (t) => {
+Deno.test({
+  name: "LLM Mixed Flow",
+  sanitizeOps: false,
+  sanitizeResources: false,
+}, async (t) => {
   let paths: TestFilePaths | undefined;
+  let viewerToClose: ViewerConcept | undefined;
   try {
     paths = await setupTestFiles();
     const inventoryPath = paths.inventory;
     const usersPath = paths.users;
-
     const viewer = await createViewer();
+    viewerToClose = viewer;
     const available = await viewer.viewAvailable();
     assert(
       available.length >= 2,
@@ -362,6 +399,9 @@ Deno.test("LLM Mixed Flow", async (t) => {
   } finally {
     if (paths) {
       await teardownTestFiles(paths);
+    }
+    if (viewerToClose) {
+      await viewerToClose.closeDb();
     }
   }
 });

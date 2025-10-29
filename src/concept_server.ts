@@ -4,6 +4,7 @@ import { walk } from "jsr:@std/fs";
 import { parseArgs } from "jsr:@std/cli/parse-args";
 import { toFileUrl } from "jsr:@std/path/to-file-url";
 import { createViewer } from "@concepts/Viewer/ViewerConcept.ts";
+import { seedDevUsers } from "./dev/seedUsers.ts";
 
 // Parse command-line arguments for port and base URL
 const flags = parseArgs(Deno.args, {
@@ -24,6 +25,12 @@ const CONCEPTS_DIR = "src/concepts";
 async function main() {
   const [db] = await getDb();
   const app = new Hono();
+  // --- Dev seeding (users + roles from CSV) ---
+  try {
+    await seedDevUsers();
+  } catch (e) {
+    console.warn("[server] Dev seeding skipped/failed:", e);
+  }
 
   app.get("/", (c) => c.text("Concept Server is running."));
 

@@ -1,0 +1,48 @@
+### POST /api/Roles/_getPermissionFlagActions
+
+**Description:** Returns the set of all Actions associated with a given PermissionFlag.
+
+**Requirements:**
+- `permission` must be a valid PermissionFlag ID
+
+**Effects:**
+- Returns all actions that the specified permission flag allows
+
+**Request Body:**
+```json
+{
+  "permission": "string"
+}
+```
+
+**Success Response Body (Query):**
+```json
+[
+  {
+    "actions": ["string"]
+  }
+]
+```
+
+**Example Request:**
+```json
+{
+  "permission": "Admin"
+}
+```
+
+**Example Success Response:**
+```json
+[
+  {
+    "actions": ["inventory.manage", "roles.manage", "reservation.checkout", "reservation.checkin"]
+  }
+]
+```
+
+**Error Response Body:**
+```json
+{
+  "error": "Permission Flag with ID 'xyz' not found."
+}
+```
