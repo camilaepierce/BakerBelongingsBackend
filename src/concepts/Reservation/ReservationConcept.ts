@@ -9,7 +9,7 @@ import {
   UserNotFoundError,
 } from "../../utils/errors.ts";
 import { ID } from "../../utils/types.ts";
-import { freshID } from "../../utils/database.ts"; // Assuming freshID is needed for new reservations
+// import { freshID } from "../../utils/database.ts"; // Not used in current implementation
 
 // Helper functions for CSV manipulation (copied from test, could be a shared utility)
 interface CsvDataForTest {
@@ -285,6 +285,7 @@ interface DbUser {
 
 export default class ReservationConcept {
   private db: Db;
+  private defaultOverdueDays = 7;
 
   constructor(db: Db) {
     this.db = db;
@@ -448,6 +449,207 @@ export default class ReservationConcept {
     await this.#debugLogItemState("checkin.post", item);
   }
   // TODO: Implement notifyCheckout for MongoDB if required
+  /**
+   * Logs and sends an email notification for each overdue item via Gmail API.
+   * REST API: POST /api/reservation/notifyCheckout
+   *
+   * Input: { message: string; overdueAfterDays?: number; subject?: string }
+   * Returns: string[] of kerbs notified
+   */
+  async notifyCheckout(
+    body: { message?: string; overdueAfterDays?: number; subject?: string },
+  ): Promise<string[]> {
+    const message = String(body?.message ?? "").trim();
+    const overdueAfterDays =
+      typeof body?.overdueAfterDays === "number" && body.overdueAfterDays > 0
+        ? body.overdueAfterDays
+        : this.defaultOverdueDays;
+    const subject = String(
+      body?.subject ?? "Overdue item reminder from Baker Belongings",
+    );
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - overdueAfterDays);
+
+    // Find overdue items: lastCheckout older than cutoff and lastKerb present
+    const overdueItems = await this.db.collection<DbInventoryItem>("items")
+      .find({
+        lastCheckout: { $ne: null, $lt: cutoff },
+        lastKerb: { $ne: null },
+      }, {
+        projection: { itemName: 1, lastKerb: 1, lastCheckout: 1 },
+      }).toArray();
+
+    if (!overdueItems.length) return [];
+
+    // Group items by kerb
+    const byKerb = new Map<
+      string,
+      Array<{ itemName: string; lastCheckout: Date }>
+    >();
+    for (const it of overdueItems) {
+      const kerb = it.lastKerb as string;
+      if (!byKerb.has(kerb)) byKerb.set(kerb, []);
+      byKerb.get(kerb)!.push({
+        itemName: it.itemName,
+        lastCheckout: it.lastCheckout!,
+      });
+    }
+
+    const kerbsNotified: string[] = [];
+
+    // Resolve recipient email for each kerb and send one email per kerb
+    for (const [kerb, items] of byKerb.entries()) {
+      try {
+        const toEmail = await this.#resolveEmailForKerb(kerb);
+        if (!toEmail) {
+          console.warn(
+            `[notifyCheckout] No email for kerb '${kerb}', skipping.`,
+          );
+          continue;
+        }
+        const effectiveTo = this.#effectiveRecipient(toEmail);
+
+        const bodyLines = [
+          message || "Reminder: You have overdue item(s) to return.",
+          "",
+          `Overdue items (checked out before ${
+            cutoff.toISOString().slice(0, 10)
+          }):`,
+          ...items.map((i) =>
+            `- ${i.itemName} (checked out: ${
+              i.lastCheckout.toISOString().slice(0, 10)
+            })`
+          ),
+          "",
+          "Please return them as soon as possible.",
+        ];
+        const textBody = bodyLines.join("\n");
+
+        await this.#sendEmail(effectiveTo, subject, textBody);
+        kerbsNotified.push(kerb);
+      } catch (e) {
+        console.warn(`[notifyCheckout] Failed to email kerb '${kerb}':`, e);
+      }
+    }
+
+    return kerbsNotified;
+  }
+
+  // --- Email helpers (Gmail API) ---
+  async #sendEmail(to: string, subject: string, text: string): Promise<void> {
+    // In tests, do not attempt real email sending
+    if (
+      Deno.env.get("NODE_ENV") === "test" ||
+      Deno.env.get("DISABLE_EMAIL") === "1"
+    ) {
+      console.log(
+        `[notifyCheckout] (test) would send email to ${to}: ${subject}`,
+      );
+      return;
+    }
+
+    const from = Deno.env.get("GMAIL_FROM") ??
+      Deno.env.get("GMAIL_IMPERSONATE_EMAIL") ?? to;
+    const raw = this.#buildRawMime({ from, to, subject, text });
+    const token = await this.#getGmailAccessToken();
+
+    const resp = await fetch(
+      "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ raw }),
+      },
+    );
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => resp.statusText);
+      throw new Error(`Gmail send failed (${resp.status}): ${errText}`);
+    }
+  }
+
+  #buildRawMime(
+    { from, to, subject, text }: {
+      from: string;
+      to: string;
+      subject: string;
+      text: string;
+    },
+  ): string {
+    const mime = [
+      `From: ${from}`,
+      `To: ${to}`,
+      `Subject: ${subject}`,
+      "MIME-Version: 1.0",
+      'Content-Type: text/plain; charset="UTF-8"',
+      "",
+      text,
+    ].join("\r\n");
+    const raw = this.#base64UrlEncode(new TextEncoder().encode(mime));
+    return raw;
+  }
+
+  #base64UrlEncode(bytes: Uint8Array): string {
+    // Use built-in btoa on string form
+    let binary = "";
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+    return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  #effectiveRecipient(original: string): string {
+    const env = Deno.env.get("NODE_ENV");
+    const sandbox = Deno.env.get("EMAIL_SANDBOX_TO");
+    // If a sandbox address is set, always use it
+    if (sandbox && sandbox.includes("@")) {
+      if (sandbox !== original) {
+        console.log(
+          `[notifyCheckout] Redirecting email '${original}' -> '${sandbox}' (sandbox)`,
+        );
+      }
+      return sandbox;
+    }
+    // In non-production environments, default to cepierce@mit.edu
+    if (env !== "production") {
+      const safe = "cepierce@mit.edu";
+      if (safe !== original) {
+        console.log(
+          `[notifyCheckout] Redirecting email '${original}' -> '${safe}' (dev default)`,
+        );
+      }
+      return safe;
+    }
+    // In production, send to the resolved original address
+    return original;
+  }
+
+  #getGmailAccessToken(): string {
+    const direct = Deno.env.get("GMAIL_OAUTH_TOKEN");
+    if (direct) return direct;
+    throw new Error(
+      "Gmail auth not configured. Provide GMAIL_OAUTH_TOKEN (OAuth2 access token with gmail.send scope).",
+    );
+  }
+
+  async #resolveEmailForKerb(kerb: string): Promise<string | null> {
+    // Try to read email from users collection if present
+    const user = await this.db.collection<{ email?: string }>("users").findOne(
+      { kerb },
+      { projection: { email: 1 } },
+    );
+    const emailFromDb = user?.email;
+    if (emailFromDb && emailFromDb.includes("@")) return emailFromDb;
+
+    // Fallback: construct from kerb and configured domain
+    const domain = Deno.env.get("EMAIL_DOMAIN");
+    if (domain) return `${kerb}@${domain}`;
+    return null;
+  }
 
   /**
    * Diagnostic: return state of a specific item. Accessible over REST.

@@ -190,16 +190,36 @@ export default class RolesConcept {
   // --- User-facing Concept Actions ---
 
   /**
-   * promoteUser (user: User, permission: PermissionFlag): Empty
+   * promoteUser (user?: User, kerb?: string, permission: PermissionFlag): Empty
    *
-   * **requires** user is a valid User, permission is a valid Permission Flag
+   * **requires** Either `user` (ID) or `kerb` (string) must resolve to a valid user; `permission` is a valid Permission Flag
    *
    * **effects** adds user to Role containing given Permission Flag
    */
   async promoteUser(
-    { user, permission }: { user: User; permission: PermissionFlag },
+    { user, kerb, permission }: {
+      user?: User;
+      kerb?: string;
+      permission: PermissionFlag;
+    },
   ): Promise<Empty | { error: string }> {
     await this.dbReady;
+    // Resolve user ID from input
+    console.log(
+      `Attempting to promote '${kerb}' to '${permission.toString()}'`,
+    );
+    let userId: User | null = null;
+    if (user) {
+      userId = user;
+    } else if (kerb) {
+      const userDoc = await this.users.findOne({ kerb });
+      userId = (userDoc?._id ?? null) as User | null;
+      if (!userId) {
+        return { error: `User with kerb '${kerb}' not found.` };
+      }
+    } else {
+      return { error: "Either 'user' or 'kerb' is required." };
+    }
     // Check if permission is valid
     const permissionExists = await this.permissionFlags.findOne({
       _id: permission,
@@ -211,7 +231,7 @@ export default class RolesConcept {
     // Add the permission to the user's roles.
     // Use $addToSet to ensure no duplicate permissions for a user.
     await this.userRoles.updateOne(
-      { _id: user },
+      { _id: userId },
       { $addToSet: { permissionFlags: permission } },
       { upsert: true }, // Create the user's role document if it doesn't exist
     );
@@ -220,16 +240,36 @@ export default class RolesConcept {
   }
 
   /**
-   * demoteUser (user: User, permission: PermissionFlag): Empty
+   * demoteUser (user?: User, kerb?: string, permission: PermissionFlag): Empty
    *
-   * **requires** user is a valid User, permission is a valid Permission Flag, user is within the role permission refers to
+   * **requires** Either `user` (ID) or `kerb` (string) must resolve to a valid user; `permission` is a valid Permission Flag; user is within the role permission refers to
    *
    * **effects** removes user from Role containing given Permission Flag
    */
   async demoteUser(
-    { user, permission }: { user: User; permission: PermissionFlag },
+    { user, kerb, permission }: {
+      user?: User;
+      kerb?: string;
+      permission: PermissionFlag;
+    },
   ): Promise<Empty | { error: string }> {
     await this.dbReady;
+    console.log(
+      `Attempting to demote '${kerb}' from '${permission.toString()}'`,
+    );
+    // Resolve user ID from input
+    let userId: User | null = null;
+    if (user) {
+      userId = user;
+    } else if (kerb) {
+      const userDoc = await this.users.findOne({ kerb });
+      userId = (userDoc?._id ?? null) as User | null;
+      if (!userId) {
+        return { error: `User with kerb '${kerb}' not found.` };
+      }
+    } else {
+      return { error: "Either 'user' or 'kerb' is required." };
+    }
     // Check if permission is valid
     const permissionExists = await this.permissionFlags.findOne({
       _id: permission,
@@ -239,25 +279,25 @@ export default class RolesConcept {
     }
 
     // Check if user is actually in the role
-    const userRoleDoc = await this.userRoles.findOne({ _id: user });
+    const userRoleDoc = await this.userRoles.findOne({ _id: userId });
     if (!userRoleDoc || !userRoleDoc.permissionFlags.includes(permission)) {
       return {
         error:
-          `User '${user}' is not part of the role defined by Permission Flag '${permission}'.`,
+          `User '${userId}' is not part of the role defined by Permission Flag '${permission}'.`,
       };
     }
 
     // Remove the permission from the user's roles
     const result = await this.userRoles.updateOne(
-      { _id: user },
+      { _id: userId },
       { $pull: { permissionFlags: permission } },
     );
 
     // If the user's permissionFlags array becomes empty after removal, optionally delete the document
     if (result.modifiedCount > 0) {
-      const updatedUserRoleDoc = await this.userRoles.findOne({ _id: user });
+      const updatedUserRoleDoc = await this.userRoles.findOne({ _id: userId });
       if (updatedUserRoleDoc?.permissionFlags.length === 0) {
-        await this.userRoles.deleteOne({ _id: user });
+        await this.userRoles.deleteOne({ _id: userId });
       }
     }
 
@@ -306,10 +346,24 @@ export default class RolesConcept {
    * **effects** returns the set of all PermissionFlags associated with the user.
    */
   async _getUserPermissions(
-    { user }: { user: User },
+    input: { user?: User; kerb?: string },
   ): Promise<{ permissionFlags: PermissionFlag[] }[] | { error: string }> {
     await this.dbReady;
-    const userRoleDoc = await this.userRoles.findOne({ _id: user });
+    // Resolve userId from either an explicit user ID or by looking up the kerb
+    let userId: User | null = null;
+    if (input?.user) {
+      userId = input.user;
+    } else if (input?.kerb) {
+      const userDoc = await this.users.findOne({ kerb: input.kerb });
+      userId = (userDoc?._id ?? null) as User | null;
+    }
+
+    if (!userId) {
+      // If user cannot be resolved, return empty permissions (no error)
+      return [{ permissionFlags: [] }];
+    }
+
+    const userRoleDoc = await this.userRoles.findOne({ _id: userId });
     return [{ permissionFlags: userRoleDoc?.permissionFlags || [] }];
   }
 

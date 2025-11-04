@@ -16,7 +16,7 @@ The system uses a three-tier permission structure:
 
 - Flags are auto-seeded on server startup in: `src/concepts/Roles/RolesConcept.ts` (ensureReferenceFlagsAndActions)
 - Flags are fetched from: `POST /api/Roles/_listAllPermissionFlags`
-- Users are assigned flags via: `src/dev/seedUsers.ts` (dev seeding) or `POST /api/Roles/promoteUser`
+- Users are assigned flags via: `src/dev/seedUsers.ts` (dev seeding) or `POST /api/Roles/promoteUser` (accepts either `user` ID or `kerb`)
 
 ## Actions
 

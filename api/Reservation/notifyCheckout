@@ -2,12 +2,14 @@
 
 **Endpoint:** `POST /api/reservation/notifyCheckout`
 
-**Description:** Logs a notification message for each overdue item. The request body should include a `message` field, which will be logged as the content of the notification. No email is sent.
+**Description:** Sends an email notification (via Gmail API) for each overdue item. The request body should include a `message` field used as the email body prefix. Emails are sent to each kerb with overdue items.
 
 **Request Body:**
 ```json
 {
-  "message": "string"
+  "message": "string",
+  "overdueAfterDays": 7,
+  "subject": "Overdue item reminder from Baker Belongings"
 }
 ```
 
@@ -22,7 +24,8 @@
 **Example Request:**
 ```json
 {
-  "message": "Reminder: Please return your overdue items."
+  "message": "Reminder: Please return your overdue items.",
+  "overdueAfterDays": 7
 }
 ```
 
@@ -32,3 +35,16 @@
 ```
 
 **Tags:** Reservation
+
+---
+
+Environment configuration required to send email:
+
+- `GMAIL_OAUTH_TOKEN`: OAuth2 access token with the `gmail.send` scope. If not set, the server will respond successfully in test mode but fail to send in production.
+- `GMAIL_FROM` (optional): Email address to use in the From header. If not provided, the impersonated or recipient address is used.
+- `EMAIL_DOMAIN` (optional but recommended): If user records do not contain an `email` field, recipient addresses are constructed as `<kerb>@<EMAIL_DOMAIN>`.
+
+Notes:
+- In `NODE_ENV=test`, the server will not attempt to send real emails and will log the intent instead.
+- In non-production environments, all emails are redirected to `cepierce@mit.edu` by default. You can override this with `EMAIL_SANDBOX_TO`.
+- In production, if email cannot be sent for a specific kerb (e.g., missing address), that kerb will be skipped.

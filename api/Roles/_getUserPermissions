@@ -1,32 +1,32 @@
 ### POST /api/Roles/_getUserPermissions
 
-**Description:** returns the set of all PermissionFlags associated with the user.
+Description: Returns the set of all PermissionFlags associated with the user.
 
-**Requirements:**
-- user exists (optional, returns empty array if not found)
+Requirements:
+- None. If the user can't be resolved, an empty array of permission flags is returned.
 
-**Effects:**
-- returns the set of all PermissionFlags associated with the user.
+Effects:
+- Looks up the user either by internal user ID or by kerb and returns their permission flags.
 
-**Request Body:**
-```json
-{
-  "user": "string"
-}
+Request Body (one of):
+```jsonc
+// Option A: by user ID
+{ "user": "<user-id>" }
+
+// Option B: by kerb (recommended for UI calls)
+{ "kerb": "<kerb>" }
 ```
 
-**Success Response Body (Query):**
+Success Response Body (Query):
 ```json
 [
   {
-    "permissionFlags": "string[]"
+    "permissionFlags": ["string"]
   }
 ]
 ```
 
-**Error Response Body:**
+Error Response Body:
 ```json
-{
-  "error": "string"
-}
+{ "error": "string" }
 ```
