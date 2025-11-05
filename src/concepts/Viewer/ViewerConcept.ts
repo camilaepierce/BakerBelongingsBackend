@@ -242,8 +242,14 @@ export default class ViewerConcept {
   // These methods rely on the in-memory `this.items` array for prompt generation
   // and filtering, so their logic remains unchanged.
   async viewAdjacent(
-    input: string | { itemName?: string; item?: string; apiKey?: string },
-    llm?: GeminiLLM,
+    input:
+      | {
+        itemName?: string;
+        item?: string;
+        apiKey?: string;
+        llm?: { executeLLM: (prompt: string) => Promise<string> };
+      }
+      | string,
   ): Promise<Item[]> {
     await this.ensureItemsLoaded();
     const name =
@@ -257,9 +263,9 @@ export default class ViewerConcept {
     );
     if (!it) throw new Error(`Item not found: ${name}`);
 
-    const llmToUse = llm ?? this.createLLM(
-      typeof input === "object" ? input?.apiKey : undefined,
-    );
+    const llmToUse = (typeof input === "object" && input?.llm)
+      ? input.llm
+      : this.createLLM(typeof input === "object" ? input?.apiKey : undefined);
 
     const prompt = this.createAdjacentPrompt(it);
     const text = await llmToUse.executeLLM(prompt);
@@ -268,8 +274,14 @@ export default class ViewerConcept {
   }
 
   async viewAutocomplete(
-    input: string | { prefix?: string; q?: string; apiKey?: string },
-    llm?: GeminiLLM,
+    input:
+      | string
+      | {
+        prefix?: string;
+        q?: string;
+        apiKey?: string;
+        llm?: { executeLLM: (prompt: string) => Promise<string> };
+      },
   ): Promise<Item[]> {
     await this.ensureItemsLoaded();
     const prefix =
@@ -277,9 +289,9 @@ export default class ViewerConcept {
         .trim();
     if (!prefix) throw new Error("viewAutocomplete requires a prefix");
 
-    const llmToUse = llm ?? this.createLLM(
-      typeof input === "object" ? input?.apiKey : undefined,
-    );
+    const llmToUse = (typeof input === "object" && input?.llm)
+      ? input.llm
+      : this.createLLM(typeof input === "object" ? input?.apiKey : undefined);
 
     const prompt = this.createAutocompletePrompt(prefix);
     const text = await llmToUse.executeLLM(prompt);
@@ -289,17 +301,22 @@ export default class ViewerConcept {
   }
 
   async recommendItems(
-    input: string | { interests?: string; apiKey?: string },
-    llm?: GeminiLLM,
+    input:
+      | {
+        interests?: string;
+        apiKey?: string;
+        llm?: { executeLLM: (prompt: string) => Promise<string> };
+      }
+      | string,
   ): Promise<{ item: Item; suggestion: string }[]> {
     await this.ensureItemsLoaded();
     const interests =
       (typeof input === "string" ? input : (input?.interests ?? "")).trim();
     if (!interests) throw new Error("recommendItems requires interests");
 
-    const llmToUse = llm ?? this.createLLM(
-      typeof input === "object" ? input?.apiKey : undefined,
-    );
+    const llmToUse = (typeof input === "object" && input?.llm)
+      ? input.llm
+      : this.createLLM(typeof input === "object" ? input?.apiKey : undefined);
 
     const prompt = this.createRecommendPrompt(interests);
     const text = await llmToUse.executeLLM(prompt);

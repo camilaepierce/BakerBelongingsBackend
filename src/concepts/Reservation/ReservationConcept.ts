@@ -168,12 +168,14 @@ export class InventoryReservationConcept {
   }
 
   async checkoutItem(
-    kerb: string,
-    itemName: string,
-    expiryDate: number,
+    body: { kerb: string; itemName: string; expiryDate: number },
   ): Promise<void> {
     const { header, inventory } = await this.getInventoryData();
     const { users } = await this.getUserData();
+
+    const kerb = String(body.kerb ?? "").trim();
+    const itemName = String(body.itemName ?? "").trim();
+    const expiryDate = Number(body.expiryDate);
 
     // 1. Validate Item Existence
     const item = inventory.get(itemName);
@@ -214,8 +216,10 @@ export class InventoryReservationConcept {
     await this.updateInventoryData(header, inventory);
   }
 
-  async checkinItem(itemName: string): Promise<void> {
+  async checkinItem(body: { itemName: string }): Promise<void> {
     const { header, inventory } = await this.getInventoryData();
+
+    const itemName = String(body.itemName ?? "").trim();
 
     // 1. Validate Item Existence
     const item = inventory.get(itemName);
@@ -292,29 +296,17 @@ export default class ReservationConcept {
   }
 
   async checkoutItem(
-    kerbOrBody: unknown,
-    itemName?: string,
-    quantity?: number,
+    body: {
+      kerb?: string;
+      itemName?: string;
+      item?: string;
+      quantity?: number;
+    },
   ): Promise<void> {
-    // Support both API object body and positional args
-    let kerb: string;
-    let item: string;
-    let qty: number;
-
-    if (
-      kerbOrBody && typeof kerbOrBody === "object" &&
-      ("kerb" in (kerbOrBody as Record<string, unknown>))
-    ) {
-      const body = kerbOrBody as Record<string, unknown>;
-      kerb = String(body.kerb ?? "").trim();
-      item = String((body.itemName ?? body.item) ?? "").trim();
-      const parsedQty = body.quantity;
-      qty = typeof parsedQty === "number" ? parsedQty : 1;
-    } else {
-      kerb = String(kerbOrBody ?? "").trim();
-      item = String(itemName ?? "").trim();
-      qty = typeof quantity === "number" ? quantity : 1;
-    }
+    // Normalize single object body
+    const kerb = String(body?.kerb ?? "").trim();
+    const item = String((body?.itemName ?? body?.item) ?? "").trim();
+    const qty = typeof body?.quantity === "number" ? body.quantity : 1;
 
     if (!kerb) {
       throw new UserNotFoundError("(missing kerb)");
@@ -391,30 +383,19 @@ export default class ReservationConcept {
 
   // A basic stub for checkinItem to satisfy potential future tests, not fully implemented
   async checkinItem(
-    kerbOrBody: unknown,
-    itemName?: string,
-    quantity: number = 1,
+    body: {
+      itemName?: string;
+      item?: string;
+      kerb?: string;
+      quantity?: number;
+    },
   ): Promise<void> {
-    // Support API object body: { kerb, item | itemName, quantity }
-    let item: string;
-    let kerb: string | undefined;
-    let qty: number;
-    if (
-      kerbOrBody && typeof kerbOrBody === "object" &&
-      ("item" in (kerbOrBody as Record<string, unknown>) ||
-        "itemName" in (kerbOrBody as Record<string, unknown>))
-    ) {
-      const body = kerbOrBody as Record<string, unknown>;
-      item = String((body.itemName ?? body.item) ?? "").trim();
-      if ("kerb" in body && typeof body.kerb === "string") {
-        kerb = String(body.kerb).trim();
-      }
-      const parsedQty = body.quantity;
-      qty = typeof parsedQty === "number" ? parsedQty : 1;
-    } else {
-      item = String(itemName ?? "").trim();
-      qty = typeof quantity === "number" ? quantity : 1;
-    }
+    // Support single object body: { kerb?, item | itemName, quantity? }
+    const item = String((body?.itemName ?? body?.item) ?? "").trim();
+    const kerb = typeof body?.kerb === "string"
+      ? String(body.kerb).trim()
+      : undefined;
+    const qty = typeof body?.quantity === "number" ? body.quantity : 1;
 
     if (!item) {
       throw new ItemNotFoundError("(missing itemName)");

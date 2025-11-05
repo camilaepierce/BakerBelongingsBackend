@@ -181,7 +181,11 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
           }
         } as DateConstructor;
 
-        await reservation.checkoutItem("user1", "Keyboard", 7);
+        await reservation.checkoutItem({
+          kerb: "user1",
+          itemName: "Keyboard",
+          expiryDate: 7,
+        });
 
         // // Verify in-memory reservation
         // const reservationsMap = (reservation as any).reservations; // Access private property for testing
@@ -212,7 +216,12 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         usersCsvPath,
       );
       await assertRejects(
-        () => reservation.checkoutItem("user1", "NonExistentItem", 1),
+        () =>
+          reservation.checkoutItem({
+            kerb: "user1",
+            itemName: "NonExistentItem",
+            expiryDate: 1,
+          }),
         ItemNotFoundError, // Use custom error
       );
     });
@@ -224,7 +233,12 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         usersCsvPath,
       );
       await assertRejects(
-        () => reservation.checkoutItem("nonexistent", "Keyboard", 1),
+        () =>
+          reservation.checkoutItem({
+            kerb: "nonexistent",
+            itemName: "Keyboard",
+            expiryDate: 1,
+          }),
         UserNotFoundError, // Use custom error
       );
     });
@@ -238,11 +252,21 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
           usersCsvPath,
         );
         await assertRejects(
-          () => reservation.checkoutItem("user2", "Keyboard", 1),
+          () =>
+            reservation.checkoutItem({
+              kerb: "user2",
+              itemName: "Keyboard",
+              expiryDate: 1,
+            }),
           UserNotFoundError, // Use custom error
         );
         await assertRejects(
-          () => reservation.checkoutItem("admin", "Keyboard", 1),
+          () =>
+            reservation.checkoutItem({
+              kerb: "admin",
+              itemName: "Keyboard",
+              expiryDate: 1,
+            }),
           UserNotFoundError, // Use custom error
         );
       },
@@ -258,7 +282,12 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         );
         // Monitor is initially set to Available=0 in initialInventoryCsvContent
         await assertRejects(
-          () => reservation.checkoutItem("user1", "Monitor", 1),
+          () =>
+            reservation.checkoutItem({
+              kerb: "user1",
+              itemName: "Monitor",
+              expiryDate: 1,
+            }),
           AlreadyCheckedOutError, // Use custom error
         );
       },
@@ -286,10 +315,19 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
           }
         } as DateConstructor;
 
-        await reservation.checkoutItem("user1", "Laptop", 1); // First checkout
+        await reservation.checkoutItem({
+          kerb: "user1",
+          itemName: "Laptop",
+          expiryDate: 1,
+        }); // First checkout
 
         await assertRejects(
-          () => reservation.checkoutItem("user1", "Laptop", 1), // Second checkout of the same item
+          () =>
+            reservation.checkoutItem({
+              kerb: "user1",
+              itemName: "Laptop",
+              expiryDate: 1,
+            }), // Second checkout of the same item
           AlreadyCheckedOutError, // Use custom error
         );
       },
@@ -320,7 +358,11 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
           }
         } as DateConstructor;
 
-        await reservation.checkoutItem("user1", "Mouse", 1); // Checkout an item first
+        await reservation.checkoutItem({
+          kerb: "user1",
+          itemName: "Mouse",
+          expiryDate: 1,
+        }); // Checkout an item first
 
         // Verify initial checkout state (sanity check)
         let { rows } = await readCsvForTest(inventoryCsvPath);
@@ -331,7 +373,7 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         let reservationsMap = (reservation as any).reservations;
         assertEquals(reservationsMap.has("Mouse"), true);
 
-        await reservation.checkinItem("Mouse"); // Now check it in
+        await reservation.checkinItem({ itemName: "Mouse" }); // Now check it in
 
         // Verify in-memory reservation is gone
         assertEquals(reservationsMap.has("Mouse"), false);
@@ -352,7 +394,7 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         usersCsvPath,
       );
       await assertRejects(
-        () => reservation.checkinItem("NonExistentItem"),
+        () => reservation.checkinItem({ itemName: "NonExistentItem" }),
         ItemNotFoundError, // Use custom error
       );
     });
@@ -367,7 +409,7 @@ Deno.test("Reservation System Test Suite (CSV-based)", async (t) => {
         );
         // Keyboard is available in CSV, but not in reservation's in-memory map initially
         await assertRejects(
-          () => reservation.checkinItem("Keyboard"),
+          () => reservation.checkinItem({ itemName: "Keyboard" }),
           AlreadyCheckedOutError, // Use custom error
         );
       },

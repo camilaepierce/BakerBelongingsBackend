@@ -103,7 +103,11 @@ async function runCli() {
         }
         const itemName = parts.join(" ");
         try {
-          await reservation.checkoutItem(kerb, itemName, days ? days : 10);
+          await reservation.checkoutItem({
+            kerb,
+            itemName,
+            expiryDate: days ? days : 10,
+          });
           // reload viewer so subsequent queries reflect change
           await viewer.loadItems();
           console.log(`Checked out ${itemName} to ${kerb}`);
@@ -118,7 +122,7 @@ async function runCli() {
           continue;
         }
         try {
-          await reservation.checkinItem(args);
+          await reservation.checkinItem({ itemName: args });
           await viewer.loadItems();
           console.log(`Checked in ${args}`);
         } catch (e: any) {

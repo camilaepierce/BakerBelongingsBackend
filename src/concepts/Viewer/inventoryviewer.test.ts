@@ -242,12 +242,15 @@ Deno.test({
         console.log(`LLM called for view tests -> raw response: ${raw}`); // Keep for debugging
         return raw;
       },
-    } as any; // Cast as any for flexibility with fake LLM structure
+    };
 
     await t.step(
       "viewAdjacent returns relevant items based on LLM recommendation",
       async () => {
-        const adjacent = await v.viewAdjacent("Music Room Key", loggingLLM);
+        const adjacent = await v.viewAdjacent({
+          itemName: "Music Room Key",
+          llm: loggingLLM,
+        });
         const adjacentNames = adjacent.map((a) => a.itemName);
         assertArrayIncludes(
           adjacentNames,
@@ -260,7 +263,10 @@ Deno.test({
     await t.step(
       "viewAutocomplete returns completions based on LLM recommendation",
       async () => {
-        const autocomplete = await v.viewAutocomplete("Music", loggingLLM);
+        const autocomplete = await v.viewAutocomplete({
+          prefix: "Music",
+          llm: loggingLLM,
+        });
         const autoNames = autocomplete.map((a) => a.itemName);
         assertArrayIncludes(
           autoNames,
@@ -304,7 +310,7 @@ Deno.test({
     const r = new ReservationConcept(db);
 
     await t.step("item becomes unavailable after checkout", async () => {
-      await r.checkoutItem(kerb, chosen, 1);
+      await r.checkoutItem({ kerb, itemName: chosen, quantity: 1 });
       const v2 = await createViewer(); // Reload viewer to reflect changes
       const stillAvail = (await v2.viewAvailable()).some((i) =>
         i.itemName === chosen
@@ -383,10 +389,10 @@ Deno.test({
 
     await t.step("LLM recommendation includes the target item", async () => {
       const naturalLanguageRequest = "music practice";
-      const recs = await viewer.recommendItems(
-        naturalLanguageRequest,
-        loggingLLM,
-      );
+      const recs = await viewer.recommendItems({
+        interests: naturalLanguageRequest,
+        llm: loggingLLM,
+      });
       const recNames = recs.map((r) => r.item.itemName);
       assertArrayIncludes(
         recNames,
