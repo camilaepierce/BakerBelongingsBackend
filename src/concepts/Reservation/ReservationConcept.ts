@@ -378,6 +378,15 @@ export default class ReservationConcept {
 
     // Diagnostics: log post-state
     await this.#debugLogItemState("checkout.post", item);
+
+    // Operational log: who checked out what
+    try {
+      console.log(
+        `[Reservation] checkoutItem: kerb='${kerb}' item='${item}' qty=${qty}`,
+      );
+    } catch (_e) {
+      // swallow logging errors
+    }
   }
 
   // A basic stub for checkinItem to satisfy potential future tests, not fully implemented
@@ -388,6 +397,7 @@ export default class ReservationConcept {
   ): Promise<void> {
     // Support API object body: { kerb, item | itemName, quantity }
     let item: string;
+    let kerb: string | undefined;
     let qty: number;
     if (
       kerbOrBody && typeof kerbOrBody === "object" &&
@@ -396,6 +406,9 @@ export default class ReservationConcept {
     ) {
       const body = kerbOrBody as Record<string, unknown>;
       item = String((body.itemName ?? body.item) ?? "").trim();
+      if ("kerb" in body && typeof body.kerb === "string") {
+        kerb = String(body.kerb).trim();
+      }
       const parsedQty = body.quantity;
       qty = typeof parsedQty === "number" ? parsedQty : 1;
     } else {
@@ -429,13 +442,12 @@ export default class ReservationConcept {
       ); // Reusing error
     }
 
-    // Assuming a simple checkin: increment available, clear lastCheckout/lastKerb
+    // Increment available but preserve lastCheckout/lastKerb for audit/history
     const updateResult = await this.db.collection<DbInventoryItem>("items")
       .updateOne(
         { _id: itemDoc._id, lastKerb: { $ne: null } }, // Ensure it was checked out
         {
           $inc: { available: qty },
-          $set: { lastCheckout: null, lastKerb: null },
         },
       );
 
@@ -447,6 +459,16 @@ export default class ReservationConcept {
 
     // Diagnostics: log post-state
     await this.#debugLogItemState("checkin.post", item);
+
+    // Operational log: who checked in what
+    try {
+      const actor = kerb ?? itemDoc.lastKerb ?? "unknown";
+      console.log(
+        `[Reservation] checkinItem: kerb='${actor}' item='${item}' qty=${qty}`,
+      );
+    } catch (_e) {
+      // swallow logging errors
+    }
   }
   // TODO: Implement notifyCheckout for MongoDB if required
   /**

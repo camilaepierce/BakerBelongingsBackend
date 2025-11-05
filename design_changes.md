@@ -21,3 +21,9 @@
 2. Updated in the frontend repository, different views and components were hidden depending on the restrictions of the user. Previously, all of the pages were available in the navigation bar, but now those pages are only visible if the permissions are high enough. For example, someone who works desk can see the management page, and a houseteam member can see the permissions page.
 3. The search type options are decreased, to better improve the user's flow and recommended actions. The autocomplete capability has been morphed to be included with searching for the item name, as opposed to requiring a precise hit in the database.
 4. Full log-in/log-out functionality has been implemented, with the Authorization concept syncing with the Role concept to allow for access to certain actions.
+
+# Design Changes, Final Submission
+1. Modified functions within Roles to pass strings instead of user Objects or ids. This allows for the user to be searched up in the MongoDB database separately, increasing the funcitonality of this action. Additionally, this simpler arrangement is much easier to debug and prevents representation independence.
+2. Updated visual design of Permissions page. It now has the ability to promote / demote users to different roles, and revert changes made before saving during the editing of roles. The changes are also helpfully updated in the right-hand side of the view, as to create a better visual for events.
+3. Added a inventory management concept to design, to also allow for desk and houseteam to add or remove items from the inventory
+4. Removed the syncs that authenticated by passing the user's kerb and password on every action, namely the promoting / demoting users and authenticating that the requesting user has the perimssions to do so. Passing the user's password between the frontend and backend on every action is less secure than should be required, so the authentication is held separately.

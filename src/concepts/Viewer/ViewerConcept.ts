@@ -134,6 +134,15 @@ export default class ViewerConcept {
   }
 
   /**
+   * Convenience wrapper returning available items as an object for sync binding.
+   * Useful so sync `when` clauses can match on a named output (items).
+   */
+  async viewAvailableWrapped(): Promise<{ items: Item[] }> {
+    const items = await this.viewAvailable();
+    return { items };
+  }
+
+  /**
    * Returns all items that are currently checked out (available === false).
    * REST API: GET /api/viewer/viewCheckedOut
    */
@@ -174,7 +183,7 @@ export default class ViewerConcept {
       (typeof category === "string" ? category : (category?.category ?? ""))
         .trim().toLowerCase();
     console.log("viewCategory called with:", search);
-    console.log("Available categories:", this.items.map((i) => i.categories));
+    // console.log("Available categories:", this.items.map((i) => i.categories));
     return this.items.filter((i) =>
       i.categories.some((c) => c.trim().toLowerCase() === search)
     );
