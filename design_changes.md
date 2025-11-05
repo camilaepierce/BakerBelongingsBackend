@@ -27,3 +27,4 @@
 2. Updated visual design of Permissions page. It now has the ability to promote / demote users to different roles, and revert changes made before saving during the editing of roles. The changes are also helpfully updated in the right-hand side of the view, as to create a better visual for events.
 3. Added a inventory management concept to design, to also allow for desk and houseteam to add or remove items from the inventory
 4. Removed the syncs that authenticated by passing the user's kerb and password on every action, namely the promoting / demoting users and authenticating that the requesting user has the perimssions to do so. Passing the user's password between the frontend and backend on every action is less secure than should be required, so the authentication is held separately.
+5. Updated error messages. Error messages are now easier to understand, and unless something is going wrong with the server, will only display human-readable error messages.
