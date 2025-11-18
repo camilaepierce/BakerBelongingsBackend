@@ -5,7 +5,7 @@
 
 ## Reflection document
 
-[Design Doc Link](design_changes.md)
+[Reflection Doc Link](reflection.md)
 
 ## Link to your demo video
 
@@ -14,3 +14,6 @@
 ## Trace of incoming actions from the demo video 
 
 [Demo Trace](demo_trace.md)
+
+## Visual Design Study
+[Visual Design](visual_design_study.pptx)
